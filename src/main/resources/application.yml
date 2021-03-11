@@ -1,0 +1,17 @@
+server:
+  port: ${SERVER_PORT:8088}
+
+application-profile:
+  default: ${DEFAULT_APPLICATION_PROFILE_PATH:classpath:default.shaclc}
+
+sparql:
+  endpoint: ${SPARQL_ENDPOINT:http://localhost:8890}
+  username: ${SPARQL_USERNAME:dba}
+  password: ${SPARQL_PASSWORD:dba}
+  defaultGraphUri: ${APPLICATION_DEFAULT_GRAPH:http://mu.semte.ch/application}
+
+spring:
+  servlet:
+    multipart:
+      max-request-size: ${MAX_REQUEST_SIZE:512MB}
+      max-file-size: ${MAX_FILE_SIZE:512MB}
