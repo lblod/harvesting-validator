@@ -1,0 +1,22 @@
+@prefix harvesting: <http://lblod.data.gift/vocabularies/harvesting/>.
+@prefix terms: <http://purl.org/dc/terms/>.
+@prefix prov: <http://www.w3.org/ns/prov#>.
+@prefix nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>.
+@prefix ext: <http://mu.semte.ch/vocabularies/ext/>.
+@prefix mu: <http://mu.semte.ch/vocabularies/core/>.
+@prefix task: <http://redpencil.data.gift/vocabularies/tasks/>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix oslc: <http://open-services.net/ns/core#>.
+@prefix cogs: <http://vocab.deri.ie/cogs#>.
+@prefix adms: <http://www.w3.org/ns/adms#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+
+<http://redpencil.data.gift/id/task/84ecbc30-7cc9-11eb-b493-2329471b3650> a task:Task;
+        mu:uuid "6040A41457D6EC0008000044";
+        dct:isPartOf <http://redpencil.data.gift/id/job/6040A41457D6EC0008000045>;
+        dct:created  "2021-03-19T12:01:35"^^xsd:dateTime;
+        dct:modified  "2021-03-19T13:01:35"^^xsd:dateTime;
+        adms:status <http://redpencil.data.gift/id/concept/JobStatus/scheduled>;
+        task:index "4"^^xsd:integer;
+        task:operation <http://lblod.data.gift/id/jobs/concept/TaskOperation/filtering>.
+

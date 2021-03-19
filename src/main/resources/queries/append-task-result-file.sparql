@@ -6,7 +6,7 @@ INSERT DATA {
     GRAPH <%s> {
         <%s> a nfo:DataContainer.
                 <%s> mu:uuid "%s".
-        <%s> task:hasFile <%s>
+        <%s> task:hasFile <%s>.
 
         <%s> task:resultsContainer <%s>.
     }

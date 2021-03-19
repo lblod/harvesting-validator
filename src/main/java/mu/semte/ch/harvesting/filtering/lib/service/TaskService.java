@@ -4,13 +4,19 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.harvesting.filtering.lib.dto.Task;
 import mu.semte.ch.harvesting.filtering.utils.ModelUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.jena.atlas.lib.DateTimeUtils;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
+import static java.util.Optional.ofNullable;
 import static mu.semte.ch.harvesting.filtering.utils.ModelUtils.escapeDateTime;
 import static mu.semte.ch.harvesting.filtering.utils.ModelUtils.escapeNumber;
 import static mu.semte.ch.harvesting.filtering.utils.ModelUtils.uuid;
@@ -40,16 +46,16 @@ public class TaskService {
                 return null;
             }
             var t = resultSet.next();
-            return Task.builder().task(t.getLiteral("task").getString())
-                       .job(t.getLiteral("job").getString())
-                       .error(t.getLiteral("error").getString())
+            return Task.builder().task(t.getResource("task").getURI())
+                       .job(t.getResource("job").getURI())
+                       .error(ofNullable(t.getResource("error")).map(Resource::getURI).orElse(null))
                        .id(t.getLiteral("id").getString())
                        .created(t.getLiteral("created").getString())
                        .modified(t.getLiteral("modified").getString())
-                       .operation(t.getLiteral("operation").getString())
+                       .operation(t.getResource("operation").getURI())
                        .index(t.getLiteral("index").getString())
-                       .graph(t.getLiteral("graph").getString())
-                       .status(t.getLiteral("status").getString())
+                       .graph(t.getResource("graph").getURI())
+                       .status(t.getResource("status").getURI())
                        .build();
         });
 
@@ -74,18 +80,20 @@ public class TaskService {
     public String writeTtlFile(String graph, Model content, String logicalFileName) {
         var phyId = uuid();
         var phyFilename = "%s.ttl".formatted(phyId);
-        var path = "/share/%s".formatted(phyFilename);
-        var physicalFile = path.replace("/share/", "share://");
+        var path = "/tmp/%s".formatted(phyFilename);
+        var physicalFile = path.replace("/tmp/", "share://");
         var loId = uuid();
         var logicalFile = "http://data.lblod.info/id/files/%s".formatted(loId);
-        var now = ModelUtils.escapeDateTime(new Date());
+        var now = DateTimeUtils.nowAsString();
         var file = new File(path);
-        content.write(new FileWriter(file), "TTL");
+        var writer = new StringWriter();
+        content.write(writer, "TTL");
+        FileUtils.writeStringToFile(file, writer.toString(), StandardCharsets.UTF_8);
         var fileSize = escapeNumber(file.length());
 
         var queryStr = queryStore.getQuery("writeTtlFile")
                                  .formatted(graph, physicalFile, logicalFile, phyId, phyFilename, now, now, fileSize, logicalFile, loId, logicalFileName, now, now, fileSize);
-
+        log.info(queryStr);
         sparqlService.executeUpdateQuery(queryStr);
         return logicalFile;
     }
@@ -94,7 +102,7 @@ public class TaskService {
         var queryStr = queryStore.getQuery("appendTaskResultFile")
                                  .formatted(task.getGraph(), containerUri, containerUri, containerId, containerUri, fileUri, task
                                          .getTask(), containerUri);
-
+         log.info(queryStr);
         sparqlService.executeUpdateQuery(queryStr);
 
     }

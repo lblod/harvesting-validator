@@ -13,7 +13,7 @@ PREFIX adms: <http://www.w3.org/ns/adms#>
 SELECT DISTINCT ?graph ?task ?id ?job ?created ?modified ?status ?index ?operation ?error WHERE {
       GRAPH ?graph {
             BIND(<%s> as ?task)
-            ?task a <http://redpencil.data.gift/vocabularies/tasks/Task>.
+            ?task a task:Task.
             ?task dct:isPartOf ?job;
                       mu:uuid ?id;
                       dct:created ?created;

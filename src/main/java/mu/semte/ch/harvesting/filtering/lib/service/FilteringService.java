@@ -13,72 +13,79 @@ import static mu.semte.ch.harvesting.filtering.utils.ModelUtils.uuid;
 @Service
 @Slf4j
 public class FilteringService {
-    private final TaskService taskService;
-    private final ShaclService shaclService;
+  private final TaskService taskService;
+  private final ShaclService shaclService;
 
-    public FilteringService(TaskService taskService, ShaclService shaclService) {
-        this.taskService = taskService;
-        this.shaclService = shaclService;
+  public FilteringService(TaskService taskService, ShaclService shaclService) {
+    this.taskService = taskService;
+    this.shaclService = shaclService;
+  }
+
+  @Async
+  public void runFilterPipeline(String deltaEntry) {
+    if (!taskService.isTask(deltaEntry)) {
+      log.debug("delta entry {} is not a task", deltaEntry);
+      return;
+    }
+    var task = taskService.loadTask(deltaEntry);
+
+    if (task == null || !task.getOperation().contains(TASK_HARVESTING_FILTERING)) {
+      log.debug("task for delta entry {} not found", deltaEntry);
+      return;
+    }
+    log.info("set task status to busy...");
+    taskService.updateTaskStatus(task, STATUS_BUSY);
+
+    var graphImportedTriples = "http://mu.semte.ch/graphs/harvesting/tasks/import/%s".formatted(task.getId());
+
+    log.info("Graph to import from: '{}'", graphImportedTriples);
+
+    var importedTriples = taskService.loadImportedTriples(graphImportedTriples);
+    var fileUri = taskService.writeTtlFile(task.getGraph(), importedTriples, "original.ttl");
+
+    var fileContainerId = uuid();
+    var fileContainerUri = "http://redpencil.data.gift/id/dataContainers/%s".formatted(fileContainerId);
+
+    log.info("fileContainerUri: '{}'", graphImportedTriples);
+
+    taskService.appendTaskResultFile(task, fileContainerUri, fileContainerId, fileUri);
+
+    ValidationReport report = shaclService.validate(importedTriples.getGraph());
+
+    var reportFile = taskService.writeTtlFile(task.getGraph(), report.getModel(), "validation-report.ttl");
+    taskService.appendTaskResultFile(task, fileContainerUri, fileContainerId, reportFile);
+
+    if (report.conforms()) {
+      taskService.updateTaskStatus(task, STATUS_SUCCESS);
+      return;
     }
 
-    @Async
-    public void runFilterPipeline(String deltaEntry) {
-        if (!taskService.isTask(deltaEntry)) {
-            log.debug("delta entry {} is not a task", deltaEntry);
-            return;
-        }
-        var task = taskService.loadTask(deltaEntry);
+    var filteredTriples = shaclService.filter(importedTriples, report);
 
-        if (task == null || !TASK_HARVESTING_FILTERING.equals(task.getOperation())) {
-            log.debug("task for delta entry {} not found", deltaEntry);
-            return;
-        }
-        log.info("set task status to busy...");
-        taskService.updateTaskStatus(task, STATUS_BUSY);
+    var filteredFile = taskService.writeTtlFile(task.getGraph(), filteredTriples, "filtered-triples.ttl");
+    taskService.appendTaskResultFile(task, fileContainerUri, fileContainerId, filteredFile);
 
-        var graphImportedTriples = "http://mu.semte.ch/graphs/harvesting/tasks/import/%s".formatted(task.getId());
+    var errorTriples = importedTriples.difference(filteredTriples);
 
-        log.info("Graph to import {}", graphImportedTriples);
+    var errorFile = taskService.writeTtlFile(task.getGraph(), errorTriples, "error-triples.ttl");
+    taskService.appendTaskResultFile(task, fileContainerUri, fileContainerId, errorFile);
 
-        var importedTriples = taskService.loadImportedTriples(graphImportedTriples);
-        var fileUri = taskService.writeTtlFile(task.getGraph(), importedTriples, "original.ttl");
+    var filteredGraph = "http://mu.semte.ch/graphs/harvesting/tasks/filter/%s".formatted(task.getId());
 
-        var fileContainerId = uuid();
-        var fileContainerUri = "http://redpencil.data.gift/id/dataContainers/%s".formatted(fileContainerId);
+    log.info("filteredGraph: '{}'", graphImportedTriples);
 
-        taskService.appendTaskResultFile(task, fileContainerUri, fileContainerId, fileUri);
+    taskService.importTriples(filteredGraph, filteredTriples);
 
-        ValidationReport report = shaclService.validate(importedTriples.getGraph());
+    var graphContainerId = uuid();
+    var graphContainerUri = "http://redpencil.data.gift/id/dataContainers/%s".formatted(graphContainerId);
 
-        var reportFile = taskService.writeTtlFile(task.getGraph(), report.getModel(), "validation-report.ttl");
-        taskService.appendTaskResultFile(task, fileContainerUri, fileContainerId, reportFile);
+    log.info("graphContainerUri: '{}'", graphImportedTriples);
 
-        if (report.conforms()) {
-            taskService.updateTaskStatus(task, STATUS_SUCCESS);
-            return;
-        }
+    taskService.appendTaskResultGraph(task, graphContainerUri, graphContainerId, filteredGraph);
 
-        var filteredTriples = shaclService.filter(importedTriples, report);
+    taskService.updateTaskStatus(task, STATUS_SUCCESS);
 
-        var filteredFile = taskService.writeTtlFile(task.getGraph(), filteredTriples, "filtered-triples.ttl");
-        taskService.appendTaskResultFile(task, fileContainerUri, fileContainerId, filteredFile);
-
-        var errorTriples = importedTriples.difference(filteredTriples);
-
-        var errorFile = taskService.writeTtlFile(task.getGraph(), errorTriples, "error-triples.ttl");
-        taskService.appendTaskResultFile(task, fileContainerUri, fileContainerId, errorFile);
-
-        var filteredGraph = "http://mu.semte.ch/graphs/harvesting/tasks/filter/%s".formatted(task.getId());
-
-        taskService.importTriples(filteredGraph, filteredTriples);
-
-        var graphContainerId = uuid();
-        var graphContainerUri = "http://redpencil.data.gift/id/dataContainers/%s".formatted(graphContainerId);
-        taskService.appendTaskResultGraph(task, graphContainerUri, graphContainerId, filteredGraph);
-
-        taskService.updateTaskStatus(task, STATUS_SUCCESS);
-
-    }
+  }
 
 
 }

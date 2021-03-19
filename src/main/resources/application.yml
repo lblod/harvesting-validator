@@ -1,5 +1,5 @@
 server:
-    port: ${SERVER_PORT:8088}
+    port: ${SERVER_PORT:8089}
 
 application-profile:
     default: ${DEFAULT_APPLICATION_PROFILE_PATH:classpath:default.shaclc}

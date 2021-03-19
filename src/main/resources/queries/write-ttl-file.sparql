@@ -7,11 +7,11 @@
                               GRAPH <%s> {
                                   <%s> a nfo:FileDataObject;
                                   nie:dataSource <%s> ;
-                                  mu:uuid %s;
+                                  mu:uuid "%s";
                                   nfo:fileName "%s" ;
                                   dct:creator <http://lblod.data.gift/services/harvesting-filter-service>;
-                                  dct:created %s;
-                                  dct:modified %s;
+                                  dct:created "%s"^^<http://www.w3.org/2001/XMLSchema#datetime>;
+                                  dct:modified "%s"^^<http://www.w3.org/2001/XMLSchema#datetime>;
                                   dct:format "text/turtle";
                                   nfo:fileSize %s;
                                   dbpedia:fileExtension "ttl".
@@ -19,8 +19,8 @@
                                   mu:uuid "%s";
                                   nfo:fileName "%s" ;
                                   dct:creator <http://lblod.data.gift/services/harvesting-import-service>;
-                                  dct:created %s;
-                                  dct:modified %s;
+                                  dct:created "%s"^^<http://www.w3.org/2001/XMLSchema#datetime>;
+                                  dct:modified "%s"^^<http://www.w3.org/2001/XMLSchema#datetime>;
                                   dct:format "text/turtle";
                                   nfo:fileSize %s;
                                   dbpedia:fileExtension "ttl" .
