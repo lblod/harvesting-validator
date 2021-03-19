@@ -12,6 +12,6 @@ PREFIX adms: <http://www.w3.org/ns/adms#>
 
 ASK {
     GRAPH ?g {
-      <%s> a <%s>.
+      <%s> a <http://redpencil.data.gift/vocabularies/tasks/Task>.
     }
 }

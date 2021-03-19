@@ -33,10 +33,12 @@ public class FilteringService {
             log.debug("task for delta entry {} not found", deltaEntry);
             return;
         }
-
+        log.info("set task status to busy...");
         taskService.updateTaskStatus(task, STATUS_BUSY);
 
         var graphImportedTriples = "http://mu.semte.ch/graphs/harvesting/tasks/import/%s".formatted(task.getId());
+
+        log.info("Graph to import {}", graphImportedTriples);
 
         var importedTriples = taskService.loadImportedTriples(graphImportedTriples);
         var fileUri = taskService.writeTtlFile(task.getGraph(), importedTriples, "original.ttl");

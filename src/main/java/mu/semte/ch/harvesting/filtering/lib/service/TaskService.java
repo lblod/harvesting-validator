@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.Date;
 
-import static mu.semte.ch.harvesting.filtering.lib.Constants.TASK_TYPE;
 import static mu.semte.ch.harvesting.filtering.utils.ModelUtils.escapeDateTime;
 import static mu.semte.ch.harvesting.filtering.utils.ModelUtils.escapeNumber;
 import static mu.semte.ch.harvesting.filtering.utils.ModelUtils.uuid;
@@ -28,13 +27,13 @@ public class TaskService {
     }
 
     public boolean isTask(String subject) {
-        String queryStr = queryStore.getQuery("isTask").formatted(subject, TASK_TYPE);
+        String queryStr = queryStore.getQuery("isTask").formatted(subject);
 
         return sparqlService.executeAskQuery(queryStr);
     }
 
     public Task loadTask(String deltaEntry) {
-        String queryTask = queryStore.getQuery("loadTask").formatted(deltaEntry, TASK_TYPE);
+        String queryTask = queryStore.getQuery("loadTask").formatted(deltaEntry);
 
         return sparqlService.executeSelectQuery(queryTask, resultSet -> {
             if (!resultSet.hasNext()) {

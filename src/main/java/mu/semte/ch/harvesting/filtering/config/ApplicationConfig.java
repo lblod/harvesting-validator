@@ -44,17 +44,17 @@ public class ApplicationConfig {
     @Bean
     public SparqlQueryStore sparqlQueryLoader() {
         var queriesMap = Arrays.stream(queries)
-                               .map(r -> {
-                                   try {
-                                       var key = toCamelCase(removeExtension(r.getFilename()), false, '-');
-                                       return immutableEntry(key, IOUtils.toString(r.getInputStream(), UTF_8));
-                                   }
-                                   catch (IOException e) {
-                                       throw new RuntimeException(e);
-                                   }
-                               })
-                               .peek(e -> log.info("query {} added to the store", e.getKey()))
-                               .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+             .map(r -> {
+                 try {
+                     var key = toCamelCase(removeExtension(r.getFilename()), false, '-');
+                     return immutableEntry(key, IOUtils.toString(r.getInputStream(), UTF_8));
+                 }
+                 catch (IOException e) {
+                     throw new RuntimeException(e);
+                 }
+             })
+             .peek(e -> log.info("query {} added to the store", e.getKey()))
+             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         return queriesMap::get;
     }
 }
