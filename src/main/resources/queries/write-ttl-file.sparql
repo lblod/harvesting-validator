@@ -1,0 +1,28 @@
+ PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+                          PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+                          PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+                          PREFIX dct: <http://purl.org/dc/terms/>
+                          PREFIX dbpedia: <http://dbpedia.org/ontology/>
+                          INSERT DATA {
+                              GRAPH <%s> {
+                                  <%s> a nfo:FileDataObject;
+                                  nie:dataSource <%s> ;
+                                  mu:uuid %s;
+                                  nfo:fileName "%s" ;
+                                  dct:creator <http://lblod.data.gift/services/harvesting-filter-service>;
+                                  dct:created %s;
+                                  dct:modified %s;
+                                  dct:format "text/turtle";
+                                  nfo:fileSize %s;
+                                  dbpedia:fileExtension "ttl".
+                                          <%s> a nfo:FileDataObject;
+                                  mu:uuid "%s";
+                                  nfo:fileName "%s" ;
+                                  dct:creator <http://lblod.data.gift/services/harvesting-import-service>;
+                                  dct:created %s;
+                                  dct:modified %s;
+                                  dct:format "text/turtle";
+                                  nfo:fileSize %s;
+                                  dbpedia:fileExtension "ttl" .
+                              }
+                          }

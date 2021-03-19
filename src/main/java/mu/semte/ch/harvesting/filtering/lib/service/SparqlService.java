@@ -28,8 +28,6 @@ import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -85,7 +83,7 @@ public class SparqlService {
             String updateQuery = String.format("INSERT DATA { GRAPH <%s> { %s } }", graphUri, writer.toString());
 
             updateRequest.add(String.format("CLEAR GRAPH <%s>", graphUri))
-                    .add(updateQuery);
+                         .add(updateQuery);
             ;
             UpdateProcessor remoteForm = UpdateExecutionFactory.createRemoteForm(updateRequest, getServerUrl(), buildHttpClient());
             remoteForm.execute();
@@ -93,7 +91,7 @@ public class SparqlService {
         });
     }
 
-    private void setAuth(){
+    private void setAuth() {
         if (StringUtils.isNotBlank(user)) {
             Authenticator.setDefault(new Authenticator() {
                 protected PasswordAuthentication getPasswordAuthentication() {
@@ -122,36 +120,37 @@ public class SparqlService {
     @SneakyThrows
     public void executeUpdateQuery(String updateQuery) {
 
-            CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-            credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password));
-            HttpClient httpclient = HttpClients.custom()
-                    .setDefaultCredentialsProvider(credentialsProvider)
-                    .build();
-            HttpOp.setDefaultHttpClient(httpclient);
+        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password));
+        HttpClient httpclient = HttpClients.custom()
+                                           .setDefaultCredentialsProvider(credentialsProvider)
+                                           .build();
+        HttpOp.setDefaultHttpClient(httpclient);
 
-            HttpPost httpPost = new HttpPost(getServerUrl());
-            httpPost.setEntity(new UrlEncodedFormEntity(Collections.singletonList(new BasicNameValuePair("query", updateQuery)), StandardCharsets.UTF_8));
-            HttpResponse execute = httpclient.execute(httpPost);
+        HttpPost httpPost = new HttpPost(getServerUrl());
+        httpPost.setEntity(new UrlEncodedFormEntity(Collections.singletonList(new BasicNameValuePair("query", updateQuery)), StandardCharsets.UTF_8));
+        HttpResponse execute = httpclient.execute(httpPost);
 
-            StatusLine statusLine = execute.getStatusLine();
-            if (statusLine.getStatusCode() != 200) {
-                try (InputStream content = execute.getEntity().getContent()) {
-                    String response = IOUtils.toString(content, StandardCharsets.UTF_8);
-                    log.error("Update didn't answer 200 code: {}", IOUtils.toString(content, StandardCharsets.UTF_8));
-                }
-            } else {
-               execute.getEntity().getContent().close();
+        StatusLine statusLine = execute.getStatusLine();
+        if (statusLine.getStatusCode() != 200) {
+            try (InputStream content = execute.getEntity().getContent()) {
+                String response = IOUtils.toString(content, StandardCharsets.UTF_8);
+                log.error("Update didn't answer 200 code: {}", IOUtils.toString(content, StandardCharsets.UTF_8));
             }
+        }
+        else {
+            execute.getEntity().getContent().close();
+        }
 
     }
 
     @SneakyThrows
     public void upload(Model model, String graphUri) {
-       setAuth();
+        setAuth();
         StringWriter writer = new StringWriter();
         model.write(writer, "ttl");
-            String sparqlUrl = getServerUrl() + "-graph-crud-auth?graph-uri=" + graphUri;
-            loadIntoGraph_exception(writer.toString().getBytes(), sparqlUrl);
+        String sparqlUrl = getServerUrl() + "-graph-crud-auth?graph-uri=" + graphUri;
+        loadIntoGraph_exception(writer.toString().getBytes(), sparqlUrl);
     }
 
     public <R> R executeSelectQuery(String query, Function<ResultSet, R> resultHandler) {
@@ -179,8 +178,8 @@ public class SparqlService {
         CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password));
         return HttpClients.custom()
-                .setDefaultCredentialsProvider(credentialsProvider)
-                .build();
+                          .setDefaultCredentialsProvider(credentialsProvider)
+                          .build();
 
     }
 }

@@ -1,8 +1,8 @@
 package mu.semte.ch.harvesting.filtering.rest;
 
 import lombok.extern.slf4j.Slf4j;
-import mu.semte.ch.harvesting.filtering.lib.service.FilteringService;
 import mu.semte.ch.harvesting.filtering.lib.dto.Delta;
+import mu.semte.ch.harvesting.filtering.lib.service.FilteringService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

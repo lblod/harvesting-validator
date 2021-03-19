@@ -28,111 +28,79 @@ import static mu.semte.ch.harvesting.filtering.utils.ModelUtils.toModel;
 @Service
 @Slf4j
 public class ShaclService {
-  private final Shapes applicationProfile;
+    private final Shapes applicationProfile;
 
-  public ShaclService(Shapes applicationProfile) {
-    this.applicationProfile = applicationProfile;
-  }
+    public ShaclService(Shapes applicationProfile) {
+        this.applicationProfile = applicationProfile;
+    }
 
-  @SneakyThrows
-  public ValidationReport validate(MultipartFile shapesModel, MultipartFile dataModel) {
-    return validate(dataModel.getInputStream(), filenameToLang(dataModel.getOriginalFilename()),
-                    shapesModel.getInputStream(), filenameToLang(shapesModel.getOriginalFilename()));
-  }
+    public ValidationReport validate(Graph dataGraph) {
+        return validate(dataGraph, applicationProfile);
+    }
 
-  @SneakyThrows
-  public ValidationReport validate(MultipartFile dataModel) {
-    return validate(dataModel.getInputStream(), filenameToLang(dataModel.getOriginalFilename()));
-  }
+    public ValidationReport validate(Graph dataGraph, Shapes shapes) {
+        return ShaclValidator.get().validate(shapes, dataGraph);
+    }
 
-  public ValidationReport validate(InputStream dataModel, Lang modelLang) {
-    return validate(toModel(dataModel, modelLang).getGraph());
-  }
+    public Graph filter(InputStream dataModel, Lang modelLang, InputStream shapesModel, Lang shapesLang) {
+        Graph dataGraph = toModel(dataModel, modelLang).getGraph();
+        Graph shapesGraph = toModel(shapesModel, shapesLang).getGraph();
+        Shapes shapes = Shapes.parse(shapesGraph);
+        ValidationReport report = validate(dataGraph, shapes);
+        return filter(dataGraph, shapes, report);
+    }
 
-  public ValidationReport validate(String dataModel, String modelLang) {
-    return validate(toModel(dataModel, modelLang).getGraph());
-  }
+    public Model filter(Model model, ValidationReport report) {
+        Graph dataGraph = model.getGraph();
+        return ModelFactory.createModelForGraph(filter(dataGraph, applicationProfile, report));
+    }
 
-  public ValidationReport validate(String dataModel, Lang modelLang) {
-    return validate(toModel(dataModel, modelLang.getName()).getGraph());
-  }
+    public Model filter(Model model) {
+        Graph dataGraph = model.getGraph();
+        ValidationReport report = validate(dataGraph);
+        return filter(model, report);
+    }
 
-  public ValidationReport validate(InputStream dataModel, Lang modelLang, InputStream shapesModel, Lang shapesLang) {
-    Graph shapesGraph = toModel(shapesModel, shapesLang).getGraph();
-    Graph dataGraph = toModel(dataModel, modelLang).getGraph();
-    Shapes shapes = Shapes.parse(shapesGraph);
-    Model model = null;
-    return ShaclValidator.get().validate(shapes, dataGraph);
-  }
+    public Graph filter(InputStream dataModel, Lang modelLang) {
+        Graph dataGraph = toModel(dataModel, modelLang).getGraph();
+        ValidationReport report = validate(dataGraph);
+        return filter(dataGraph, applicationProfile, report);
+    }
 
-  public ValidationReport validate(Graph dataGraph) {
-    return validate(dataGraph,applicationProfile);
-  }
+    public Graph filter(Graph dataGraph, Shapes shapes, ValidationReport report) {
+        List<String> targetClasses = shapes
+                .getTargetShapes()
+                .stream()
+                .flatMap(s -> s.getTargets().stream().map(t -> t.getObject().getURI()))
+                .collect(Collectors.toList());
 
-  public ValidationReport validate(Graph dataGraph, Shapes shapes) {
-    return ShaclValidator.get().validate(shapes, dataGraph);
-  }
+        report.getEntries().forEach(r -> dataGraph.remove(r.focusNode(), ShaclPaths.pathNode(r.resultPath()), null));
 
-  public Graph filter(InputStream dataModel, Lang modelLang, InputStream shapesModel, Lang shapesLang) {
-    Graph dataGraph = toModel(dataModel, modelLang).getGraph();
-    Graph shapesGraph = toModel(shapesModel, shapesLang).getGraph();
-    Shapes shapes = Shapes.parse(shapesGraph);
-    ValidationReport report = validate(dataGraph, shapes);
-    return filter(dataGraph, shapes, report);
-  }
+        // filter the classes not defined as target shapes
+        List<String> classesNotDefinedAsTargetShapes = dataGraph
+                .find(null, RDF.type.asNode(), null)
+                .filterDrop(triple -> targetClasses.contains(triple.getObject().getURI()))
+                .mapWith(triple -> triple.getSubject().getURI()).toList();
 
+        classesNotDefinedAsTargetShapes.forEach(sub -> dataGraph.remove(NodeFactory.createURI(sub), null, null));
 
-  public Model filter(Model model, ValidationReport report) {
-    Graph dataGraph = model.getGraph();
-    return ModelFactory.createModelForGraph(filter(dataGraph, applicationProfile, report));
-  }
+        return dataGraph;
+    }
 
-  public Model filter(Model model) {
-    Graph dataGraph = model.getGraph();
-    ValidationReport report = validate(dataGraph);
-    return filter(model, report);
-  }
+    @SneakyThrows
+    public Graph filter(String dataModel, Lang modelLang) {
+        return filter(IOUtils.toInputStream(dataModel, StandardCharsets.UTF_8), modelLang);
+    }
 
-  public Graph filter(InputStream dataModel, Lang modelLang) {
-    Graph dataGraph = toModel(dataModel, modelLang).getGraph();
-    ValidationReport report = validate(dataGraph);
-    return filter(dataGraph, applicationProfile, report);
-  }
+    @SneakyThrows
+    public Graph filter(MultipartFile dataModel) {
+        return filter(dataModel.getInputStream(), filenameToLang(dataModel.getOriginalFilename()));
+    }
 
-  public Graph filter(Graph dataGraph, Shapes shapes, ValidationReport report) {
-    List<String> targetClasses = shapes
-            .getTargetShapes()
-            .stream()
-            .flatMap(s -> s.getTargets().stream().map(t -> t.getObject().getURI()))
-            .collect(Collectors.toList());
-
-    report.getEntries().forEach(r -> dataGraph.remove(r.focusNode(),ShaclPaths.pathNode(r.resultPath()),null));
-
-    // filter the classes not defined as target shapes
-    List<String> classesNotDefinedAsTargetShapes = dataGraph
-            .find(null, RDF.type.asNode(), null)
-            .filterDrop(triple -> targetClasses.contains(triple.getObject().getURI()))
-            .mapWith(triple -> triple.getSubject().getURI()).toList();
-
-    classesNotDefinedAsTargetShapes.forEach(sub -> dataGraph.remove(NodeFactory.createURI(sub),null,null));
-
-    return dataGraph;
-  }
-
-  @SneakyThrows
-  public Graph filter(String dataModel, Lang modelLang) {
-    return filter(IOUtils.toInputStream(dataModel, StandardCharsets.UTF_8), modelLang);
-  }
-
-  @SneakyThrows
-  public Graph filter(MultipartFile dataModel) {
-    return filter(dataModel.getInputStream(), filenameToLang(dataModel.getOriginalFilename()));
-  }
-
-  @SneakyThrows
-  public Graph filter(MultipartFile dataModel, MultipartFile shapesFile) {
-    return filter(dataModel.getInputStream(), filenameToLang(dataModel.getOriginalFilename()),
-            shapesFile.getInputStream(), filenameToLang(shapesFile.getOriginalFilename()));
-  }
+    @SneakyThrows
+    public Graph filter(MultipartFile dataModel, MultipartFile shapesFile) {
+        return filter(dataModel.getInputStream(), filenameToLang(dataModel.getOriginalFilename()),
+                      shapesFile.getInputStream(), filenameToLang(shapesFile.getOriginalFilename()));
+    }
 
 }
