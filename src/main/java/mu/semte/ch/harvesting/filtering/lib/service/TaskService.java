@@ -3,7 +3,6 @@ package mu.semte.ch.harvesting.filtering.lib.service;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.harvesting.filtering.lib.dto.Task;
-import mu.semte.ch.harvesting.filtering.utils.ModelUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.jena.atlas.lib.DateTimeUtils;
 import org.apache.jena.rdf.model.Model;
@@ -11,7 +10,6 @@ import org.apache.jena.rdf.model.Resource;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -111,7 +109,8 @@ public class TaskService {
         var queryStr = queryStore.getQuery("appendTaskResultGraph")
                                  .formatted(task.getGraph(), graphContainerUri, graphContainerUri, graphContainerId, graphContainerUri, filteredGraph, task
                                          .getTask(), graphContainerUri);
-        sparqlService.executeUpdateQuery(queryStr);
+      log.info(queryStr);
+      sparqlService.executeUpdateQuery(queryStr);
 
     }
 }

@@ -51,7 +51,9 @@ public class ShaclService {
     }
 
     public Model filter(Model model, ValidationReport report) {
-        Graph dataGraph = model.getGraph();
+        Model copy = ModelFactory.createDefaultModel();
+        copy.add(model);
+        Graph dataGraph = copy.getGraph();
         return ModelFactory.createModelForGraph(filter(dataGraph, applicationProfile, report));
     }
 

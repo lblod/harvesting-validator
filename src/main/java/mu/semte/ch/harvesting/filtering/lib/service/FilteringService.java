@@ -72,18 +72,20 @@ public class FilteringService {
 
     var filteredGraph = "http://mu.semte.ch/graphs/harvesting/tasks/filter/%s".formatted(task.getId());
 
-    log.info("filteredGraph: '{}'", graphImportedTriples);
+    log.info("filteredGraph: '{}'", filteredGraph);
 
     taskService.importTriples(filteredGraph, filteredTriples);
 
     var graphContainerId = uuid();
     var graphContainerUri = "http://redpencil.data.gift/id/dataContainers/%s".formatted(graphContainerId);
 
-    log.info("graphContainerUri: '{}'", graphImportedTriples);
+    log.info("graphContainerUri: '{}'", graphContainerUri);
 
     taskService.appendTaskResultGraph(task, graphContainerUri, graphContainerId, filteredGraph);
 
     taskService.updateTaskStatus(task, STATUS_SUCCESS);
+
+    log.info("Done with success for task {}", task.getId());
 
   }
 
