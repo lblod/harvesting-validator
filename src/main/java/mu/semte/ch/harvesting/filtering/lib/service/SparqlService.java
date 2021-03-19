@@ -158,6 +158,11 @@ public class SparqlService {
             return resultHandler.apply(queryExecution.execSelect());
         }
     }
+    public Model executeConstructQuery(String query) {
+        try (QueryExecution queryExecution = QueryExecutionFactory.sparqlService(getServerUrl(), query, buildHttpClient())) {
+            return queryExecution.execConstruct();
+        }
+    }
 
     public Model executeSelectQuery(String query) {
         return executeSelectQuery(query, RDFOutput::encodeAsModel);

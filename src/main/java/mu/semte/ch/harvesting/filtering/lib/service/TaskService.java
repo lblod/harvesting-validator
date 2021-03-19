@@ -63,7 +63,7 @@ public class TaskService {
 
     public Model loadImportedTriples(String graphImportedTriples) {
         String queryTask = queryStore.getQuery("loadImportedTriples").formatted(graphImportedTriples);
-        return sparqlService.executeSelectQuery(queryTask);
+        return sparqlService.executeConstructQuery(queryTask);
     }
 
     public void updateTaskStatus(Task task, String status) {
@@ -80,8 +80,8 @@ public class TaskService {
     public String writeTtlFile(String graph, Model content, String logicalFileName) {
         var phyId = uuid();
         var phyFilename = "%s.ttl".formatted(phyId);
-        var path = "/tmp/%s".formatted(phyFilename);
-        var physicalFile = path.replace("/tmp/", "share://");
+        var path = "/share/%s".formatted(phyFilename);
+        var physicalFile = path.replace("/share/", "share://");
         var loId = uuid();
         var logicalFile = "http://data.lblod.info/id/files/%s".formatted(loId);
         var now = DateTimeUtils.nowAsString();
