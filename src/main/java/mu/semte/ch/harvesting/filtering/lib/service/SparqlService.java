@@ -1,5 +1,9 @@
 package mu.semte.ch.harvesting.filtering.lib.service;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -15,10 +19,14 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.ResultSet;
+import org.apache.jena.query.Syntax;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.web.HttpOp;
 import org.apache.jena.sparql.resultset.RDFOutput;
@@ -31,44 +39,22 @@ import org.apache.jena.update.UpdateRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.net.Authenticator;
-import java.net.HttpURLConnection;
-import java.net.PasswordAuthentication;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
-@Service
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Slf4j
 public class SparqlService {
-    @Value("${sparql.endpoint}")
     private String url;
-    @Value("${sparql.username}")
-    private String user;
-    @Value("${sparql.password}")
-    private String password;
-
-
-    private static void loadIntoGraph_exception(byte[] data, String updateUrl) throws Exception {
-        URL url = new URL(updateUrl);
-
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setDoOutput(true);
-        conn.setInstanceFollowRedirects(true);
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/x-turtle");
-        conn.setRequestProperty("charset", "utf-8");
-        conn.setRequestProperty("Content-Length", Integer.toString(data.length));
-        conn.setUseCaches(false);
-        conn.getOutputStream().write(data);
-
-        if ((conn.getResponseCode() / 100) != 2)
-            throw new RuntimeException("Not 2xx as answer: " + conn.getResponseCode() + " " + conn.getResponseMessage());
-    }
+    private Map<String,String> muHeaders;
 
     public String getServerUrl() {
         return url + "/sparql";
@@ -82,49 +68,19 @@ public class SparqlService {
 
             String updateQuery = String.format("INSERT DATA { GRAPH <%s> { %s } }", graphUri, writer.toString());
 
-            updateRequest.add(String.format("CLEAR GRAPH <%s>", graphUri))
-                         .add(updateQuery);
-            ;
+            updateRequest.add(updateQuery);
+
             UpdateProcessor remoteForm = UpdateExecutionFactory.createRemoteForm(updateRequest, getServerUrl(), buildHttpClient());
             remoteForm.execute();
 
         });
     }
 
-    private void setAuth() {
-        if (StringUtils.isNotBlank(user)) {
-            Authenticator.setDefault(new Authenticator() {
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(user, password.toCharArray());
-                }
-            });
-        }
-    }
-
-    @SneakyThrows
-    public void uploadTtlFile(File file) {
-        setAuth();
-        String sparqlUrl = getServerUrl() + "-graph-crud-auth?graph-uri=" + StringUtils.removeEnd(file.getName(), ".ttl");
-        loadIntoGraph_exception(FileUtils.readFileToByteArray(file), sparqlUrl);
-
-    }
-
-    @SneakyThrows
-    public Model queryForModel(String query) {
-        try (QueryExecution queryExecution = QueryExecutionFactory.sparqlService(getServerUrl(), query, buildHttpClient())) {
-            return queryExecution.execConstruct();
-        }
-    }
-
-
     @SneakyThrows
     public void executeUpdateQuery(String updateQuery) {
 
-        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password));
-        HttpClient httpclient = HttpClients.custom()
-                                           .setDefaultCredentialsProvider(credentialsProvider)
-                                           .build();
+        HttpClient httpclient = buildHttpClient();
+
         HttpOp.setDefaultHttpClient(httpclient);
 
         HttpPost httpPost = new HttpPost(getServerUrl());
@@ -142,15 +98,6 @@ public class SparqlService {
             execute.getEntity().getContent().close();
         }
 
-    }
-
-    @SneakyThrows
-    public void upload(Model model, String graphUri) {
-        setAuth();
-        StringWriter writer = new StringWriter();
-        model.write(writer, "ttl");
-        String sparqlUrl = getServerUrl() + "-graph-crud-auth?graph-uri=" + graphUri;
-        loadIntoGraph_exception(writer.toString().getBytes(), sparqlUrl);
     }
 
     public <R> R executeSelectQuery(String query, Function<ResultSet, R> resultHandler) {
@@ -179,12 +126,9 @@ public class SparqlService {
     }
 
     private HttpClient buildHttpClient() {
-        if (StringUtils.isBlank(getServerUrl())) return null;
-        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password));
-        return HttpClients.custom()
-                          .setDefaultCredentialsProvider(credentialsProvider)
-                          .build();
+      return HttpClients.custom()
+                        .setDefaultHeaders(muHeaders.entrySet().stream().map(h -> new BasicHeader(h.getKey(), h.getValue())).collect(Collectors.toList()))
+                        .build();
 
     }
 }

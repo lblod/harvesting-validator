@@ -8,7 +8,9 @@ public interface Constants {
     String STATUS_SCHEDULED = "http://redpencil.data.gift/id/concept/JobStatus/scheduled";
     String STATUS_SUCCESS = "http://redpencil.data.gift/id/concept/JobStatus/success";
 
-
+    String HEADER_MU_SESSION_ID = "mu-session-id";
+    String HEADER_MU_CALL_ID = "mu-call-id";
+    String HEADER_MU_AUTH_SUDO = "mu-auth-sudo";
 
 
 }

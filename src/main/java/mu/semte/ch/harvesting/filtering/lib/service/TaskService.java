@@ -22,21 +22,21 @@ import static mu.semte.ch.harvesting.filtering.utils.ModelUtils.uuid;
 @Service
 @Slf4j
 public class TaskService {
-    private final SparqlService sparqlService;
-    private final SparqlQueryStore queryStore;
 
-    public TaskService(SparqlService sparqlService, SparqlQueryStore queryStore) {
-        this.sparqlService = sparqlService;
+
+  private final SparqlQueryStore queryStore;
+
+    public TaskService(SparqlQueryStore queryStore) {
         this.queryStore = queryStore;
     }
 
-    public boolean isTask(String subject) {
+    public boolean isTask(String subject, SparqlService sparqlService) {
         String queryStr = queryStore.getQuery("isTask").formatted(subject);
 
         return sparqlService.executeAskQuery(queryStr);
     }
 
-    public Task loadTask(String deltaEntry) {
+    public Task loadTask(String deltaEntry, SparqlService sparqlService) {
         String queryTask = queryStore.getQuery("loadTask").formatted(deltaEntry);
 
         return sparqlService.executeSelectQuery(queryTask, resultSet -> {
@@ -59,23 +59,31 @@ public class TaskService {
 
     }
 
-    public Model loadImportedTriples(String graphImportedTriples) {
+    public Model loadImportedTriples(String graphImportedTriples,
+                                     SparqlService sparqlService) {
         String queryTask = queryStore.getQuery("loadImportedTriples").formatted(graphImportedTriples);
         return sparqlService.executeConstructQuery(queryTask);
     }
 
-    public void updateTaskStatus(Task task, String status) {
+    public void updateTaskStatus(Task task,
+                                 String status,
+                                 SparqlService sparqlService) {
         String queryUpdate = queryStore.getQuery("updateTaskStatus")
                                        .formatted(status, escapeDateTime(new Date()), task.getTask());
         sparqlService.executeUpdateQuery(queryUpdate);
     }
 
-    public void importTriples(String filteredGraph, Model filteredTriples) {
-        sparqlService.upload(filteredTriples, filteredGraph);
+    public void importTriples(String filteredGraph,
+                              Model filteredTriples,
+                              SparqlService sparqlService) {
+        sparqlService.executeUpdateInTransaction(filteredGraph,filteredTriples);
     }
 
     @SneakyThrows
-    public String writeTtlFile(String graph, Model content, String logicalFileName) {
+    public String writeTtlFile(String graph,
+                               Model content,
+                               String logicalFileName,
+                               SparqlService sparqlService) {
         var phyId = uuid();
         var phyFilename = "%s.ttl".formatted(phyId);
         var path = "/share/%s".formatted(phyFilename);
@@ -96,7 +104,11 @@ public class TaskService {
         return logicalFile;
     }
 
-    public void appendTaskResultFile(Task task, String containerUri, String containerId, String fileUri) {
+    public void appendTaskResultFile(Task task,
+                                     String containerUri,
+                                     String containerId,
+                                     String fileUri,
+                                     SparqlService sparqlService) {
         var queryStr = queryStore.getQuery("appendTaskResultFile")
                                  .formatted(task.getGraph(), containerUri, containerUri, containerId, containerUri, fileUri, task
                                          .getTask(), containerUri);
@@ -105,7 +117,11 @@ public class TaskService {
 
     }
 
-    public void appendTaskResultGraph(Task task, String graphContainerUri, String graphContainerId, String filteredGraph) {
+    public void appendTaskResultGraph(Task task,
+                                      String graphContainerUri,
+                                      String graphContainerId,
+                                      String filteredGraph,
+                                      SparqlService sparqlService) {
         var queryStr = queryStore.getQuery("appendTaskResultGraph")
                                  .formatted(task.getGraph(), graphContainerUri, graphContainerUri, graphContainerId, graphContainerUri, filteredGraph, task
                                          .getTask(), graphContainerUri);

@@ -8,8 +8,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import static mu.semte.ch.harvesting.filtering.lib.Constants.STATUS_SCHEDULED;
-import static mu.semte.ch.harvesting.filtering.lib.Constants.SUBJECT_STATUS;
+import javax.servlet.http.HttpServletRequest;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
+import static java.util.Optional.ofNullable;
+import static mu.semte.ch.harvesting.filtering.lib.Constants.*;
 
 @RestController
 @Slf4j
@@ -22,9 +28,12 @@ public class AppController {
     }
 
     @PostMapping("/delta")
-    public ResponseEntity<Void> delta(@RequestBody Delta delta) {
-
-        var entries = delta.getInsertsFor(SUBJECT_STATUS, STATUS_SCHEDULED);
+    public ResponseEntity<Void> delta(@RequestBody Delta delta, HttpServletRequest request) {
+      Map<String,String> muHeaders = new HashMap<>();
+      ofNullable(request.getHeader(HEADER_MU_CALL_ID)).ifPresent(h -> muHeaders.put(HEADER_MU_CALL_ID, h));
+      ofNullable(request.getHeader(HEADER_MU_SESSION_ID)).ifPresent(h -> muHeaders.put(HEADER_MU_SESSION_ID, h));
+      muHeaders.put("HEADER_MU_AUTH_SUDO", "true");
+      var entries = delta.getInsertsFor(SUBJECT_STATUS, STATUS_SCHEDULED);
 
         if (entries.isEmpty()) {
             log.error("Delta dit not contain potential tasks that are ready for filtering, awaiting the next batch!");
@@ -32,7 +41,9 @@ public class AppController {
         }
 
         // NOTE: we don't wait as we do not want to keep hold off the connection.
-        entries.forEach(filteringService::runFilterPipeline);
+        entries.forEach(e ->
+          filteringService.runFilterPipeline(e, muHeaders)
+        );
 
         return ResponseEntity.ok().build();
     }
