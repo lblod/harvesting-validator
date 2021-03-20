@@ -11,10 +11,9 @@ POC for filtering based on shacl shapes
 - Wait that the migration service has finished
 - Open postman
 - Run the request below
-- Check the database at `http://localhost:8890/sparql`
 - check the generated files in `./example/filtering`
 
-`POST localhost:8088/delta`
+`POST localhost/delta`
   
 ```
 {
