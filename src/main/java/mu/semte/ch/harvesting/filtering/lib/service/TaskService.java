@@ -62,7 +62,7 @@ public class TaskService {
     public Model loadImportedTriples(String graphImportedTriples,
                                      SparqlService sparqlService) {
         String queryTask = queryStore.getQuery("loadImportedTriples").formatted(graphImportedTriples);
-        return sparqlService.executeConstructQuery(queryTask);
+        return sparqlService.executeConstructQueryResultAsSparqlJson(queryTask);
     }
 
     public void updateTaskStatus(Task task,

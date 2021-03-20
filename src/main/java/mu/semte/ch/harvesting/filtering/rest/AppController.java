@@ -32,7 +32,7 @@ public class AppController {
       Map<String,String> muHeaders = new HashMap<>();
       ofNullable(request.getHeader(HEADER_MU_CALL_ID)).ifPresent(h -> muHeaders.put(HEADER_MU_CALL_ID, h));
       ofNullable(request.getHeader(HEADER_MU_SESSION_ID)).ifPresent(h -> muHeaders.put(HEADER_MU_SESSION_ID, h));
-      muHeaders.put("HEADER_MU_AUTH_SUDO", "true");
+      muHeaders.put(HEADER_MU_AUTH_SUDO, "true");
       var entries = delta.getInsertsFor(SUBJECT_STATUS, STATUS_SCHEDULED);
 
         if (entries.isEmpty()) {

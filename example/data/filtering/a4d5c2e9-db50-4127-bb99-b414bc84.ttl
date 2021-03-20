@@ -1,0 +1,13 @@
+<http://example.com/ns#Calvin>
+        a                            <http://example.com/ns#Person> ;
+        <http://example.com/ns#ssn>  "987-65-4321" .
+
+<http://example.com/ns#Bob>
+        a       <http://example.com/ns#Person> .
+
+<http://example.com/ns#Momo>
+        a                            <http://example.com/ns#Person> ;
+        <http://example.com/ns#ssn>  "987-65-4321" .
+
+<http://example.com/ns#Alice>
+        a       <http://example.com/ns#Person> .

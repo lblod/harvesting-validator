@@ -21,6 +21,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -28,6 +29,10 @@ import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.Syntax;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.impl.StatementImpl;
 import org.apache.jena.riot.web.HttpOp;
 import org.apache.jena.sparql.resultset.RDFOutput;
 import org.apache.jena.system.Txn;
@@ -105,9 +110,27 @@ public class SparqlService {
             return resultHandler.apply(queryExecution.execSelect());
         }
     }
+
     public Model executeConstructQuery(String query) {
         try (QueryExecution queryExecution = QueryExecutionFactory.sparqlService(getServerUrl(), query, buildHttpClient())) {
             return queryExecution.execConstruct();
+        }
+    }
+
+    // todo workaround to bypass mu-auth response not returning rdf data
+    // https://github.com/mu-semtech/mu-authorization/issues/4
+    public Model executeConstructQueryResultAsSparqlJson(String query) {
+        try (QueryExecution queryExecution = QueryExecutionFactory.sparqlService(getServerUrl(), query, buildHttpClient())) {
+            var result = queryExecution.execSelect();
+            Model model = ModelFactory.createDefaultModel();
+            result.forEachRemaining(querySolution -> {
+              RDFNode subject = querySolution.get("s");
+              RDFNode predicate = querySolution.get("p");
+              RDFNode object = querySolution.get("o");
+              var triple = Triple.create(subject.asNode(), predicate.asNode(), object.asNode());
+              model.getGraph().add(triple);
+            });
+            return model;
         }
     }
 
