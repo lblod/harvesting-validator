@@ -10,14 +10,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Task {
-    private String graph;
-    private String task;
-    private String id;
-    private String job;
-    private String created;
-    private String modified;
-    private String status;
-    private String index;
-    private String operation;
-    private String error;
+  private String graph;
+  private String task;
+  private String id;
+  private String job;
+  private String created;
+  private String modified;
+  private String status;
+  private String index;
+  private String operation;
+  private String error;
 }

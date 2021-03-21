@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Node {
-    private String type;
-    private String value;
-    private String datatype;
+  private String type;
+  private String value;
+  private String datatype;
 }

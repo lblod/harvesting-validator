@@ -9,42 +9,44 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 import static java.util.Optional.ofNullable;
-import static mu.semte.ch.harvesting.filtering.lib.Constants.*;
+import static mu.semte.ch.harvesting.filtering.lib.Constants.HEADER_MU_AUTH_SUDO;
+import static mu.semte.ch.harvesting.filtering.lib.Constants.HEADER_MU_CALL_ID;
+import static mu.semte.ch.harvesting.filtering.lib.Constants.HEADER_MU_SESSION_ID;
+import static mu.semte.ch.harvesting.filtering.lib.Constants.STATUS_SCHEDULED;
+import static mu.semte.ch.harvesting.filtering.lib.Constants.SUBJECT_STATUS;
 
 @RestController
 @Slf4j
 public class AppController {
 
-    private final FilteringService filteringService;
+  private final FilteringService filteringService;
 
-    public AppController(FilteringService filteringService) {
-        this.filteringService = filteringService;
+  public AppController(FilteringService filteringService) {
+    this.filteringService = filteringService;
+  }
+
+  @PostMapping("/delta")
+  public ResponseEntity<Void> delta(@RequestBody Delta delta, HttpServletRequest request) {
+    Map<String, String> muHeaders = new HashMap<>();
+    ofNullable(request.getHeader(HEADER_MU_CALL_ID)).ifPresent(h -> muHeaders.put(HEADER_MU_CALL_ID, h));
+    ofNullable(request.getHeader(HEADER_MU_SESSION_ID)).ifPresent(h -> muHeaders.put(HEADER_MU_SESSION_ID, h));
+    muHeaders.put(HEADER_MU_AUTH_SUDO, "true");
+    var entries = delta.getInsertsFor(SUBJECT_STATUS, STATUS_SCHEDULED);
+
+    if (entries.isEmpty()) {
+      log.error("Delta dit not contain potential tasks that are ready for filtering, awaiting the next batch!");
+      return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/delta")
-    public ResponseEntity<Void> delta(@RequestBody Delta delta, HttpServletRequest request) {
-      Map<String,String> muHeaders = new HashMap<>();
-      ofNullable(request.getHeader(HEADER_MU_CALL_ID)).ifPresent(h -> muHeaders.put(HEADER_MU_CALL_ID, h));
-      ofNullable(request.getHeader(HEADER_MU_SESSION_ID)).ifPresent(h -> muHeaders.put(HEADER_MU_SESSION_ID, h));
-      muHeaders.put(HEADER_MU_AUTH_SUDO, "true");
-      var entries = delta.getInsertsFor(SUBJECT_STATUS, STATUS_SCHEDULED);
+    // NOTE: we don't wait as we do not want to keep hold off the connection.
+    entries.forEach(e ->
+                            filteringService.runFilterPipeline(e, muHeaders)
+    );
 
-        if (entries.isEmpty()) {
-            log.error("Delta dit not contain potential tasks that are ready for filtering, awaiting the next batch!");
-            return ResponseEntity.noContent().build();
-        }
-
-        // NOTE: we don't wait as we do not want to keep hold off the connection.
-        entries.forEach(e ->
-          filteringService.runFilterPipeline(e, muHeaders)
-        );
-
-        return ResponseEntity.ok().build();
-    }
+    return ResponseEntity.ok().build();
+  }
 }

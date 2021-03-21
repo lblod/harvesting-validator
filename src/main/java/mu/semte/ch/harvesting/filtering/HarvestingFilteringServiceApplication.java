@@ -8,8 +8,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 public class HarvestingFilteringServiceApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(HarvestingFilteringServiceApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(HarvestingFilteringServiceApplication.class, args);
+  }
 
 }

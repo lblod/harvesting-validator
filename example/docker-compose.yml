@@ -22,6 +22,8 @@ services:
       - ./data/db:/data
       - ./config/db/virtuoso.ini:/data/virtuoso.ini
     restart: always
+    ports:
+      - 8891:8890
   db:
     image: semtech/mu-authorization:0.6.0-beta.7
     environment:
@@ -47,8 +49,11 @@ services:
       - ./data/filtering:/share
     environment:
       SERVER_PORT: "80"
+      SHARE_FOLDER_DIRECTORY: "/share"
+      DEFAULT_BATCH_SIZE: 20
       DEFAULT_APPLICATION_PROFILE_PATH: "file:/config/application-profile.ttl"
-      SPARQL_ENDPOINT: "http://db:8890"
+      LOGGING_LEVEL: "DEBUG"
+      SPARQL_ENDPOINT: "http://db:8890/sparql"
       MAX_REQUEST_SIZE: "512MB"
       MAX_FILE_SIZE: "512MB"
       JAVA_OPTS: "-Xms512m -Xmx512m"

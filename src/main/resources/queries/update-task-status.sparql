@@ -12,7 +12,7 @@ DELETE {
 INSERT {
   GRAPH ?g {
    ?subject adms:status <%s>.
-   ?subject dct:modified %s.
+   ?subject dct:modified "%s"^^xsd:datetime.
   }
 }
 WHERE {
