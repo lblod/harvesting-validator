@@ -11,6 +11,10 @@
 @prefix adms: <http://www.w3.org/ns/adms#>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 
+
+<http://redpencil.data.gift/id/dataContainers/2429be50-7dcc-4e3c-33d9-c190011> a <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#DataContainer> ;
+                                               task:hasGraph <http://mu.semte.ch/graphs/harvesting/tasks/import/6040A41457D6EC0008000044>.
+
 <http://redpencil.data.gift/id/task/84ecbc30-7cc9-11eb-b493-2329471b3650> a task:Task;
         mu:uuid "6040A41457D6EC0008000044";
         dct:isPartOf <http://redpencil.data.gift/id/job/6040A41457D6EC0008000045>;
@@ -18,5 +22,5 @@
         dct:modified  "2021-03-19T13:01:35"^^xsd:dateTime;
         adms:status <http://redpencil.data.gift/id/concept/JobStatus/scheduled>;
         task:index "4"^^xsd:integer;
+        task:inputContainer <http://redpencil.data.gift/id/dataContainers/2429be50-7dcc-4e3c-33d9-c190011>;
         task:operation <http://lblod.data.gift/id/jobs/concept/TaskOperation/filtering>.
-

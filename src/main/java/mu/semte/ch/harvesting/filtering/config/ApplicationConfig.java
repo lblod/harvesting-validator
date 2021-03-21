@@ -1,6 +1,5 @@
 package mu.semte.ch.harvesting.filtering.config;
 
-import com.github.jsonldjava.shaded.com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.harvesting.filtering.lib.service.SparqlQueryStore;
 import org.apache.commons.io.IOUtils;
@@ -13,7 +12,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;

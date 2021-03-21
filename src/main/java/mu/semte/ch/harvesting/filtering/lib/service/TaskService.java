@@ -129,4 +129,16 @@ public class TaskService {
       sparqlService.executeUpdateQuery(queryStr);
 
     }
+
+  public String selectInputContainerGraph(Task task, SparqlService sparqlService) {
+    String queryTask = queryStore.getQuery("selectInputContainerGraph").formatted(task.getTask());
+
+    return sparqlService.executeSelectQuery(queryTask, resultSet -> {
+      if (!resultSet.hasNext()) {
+        return null; // todo fail in case of errors!!!!
+      }
+      var t = resultSet.next();
+      return t.getResource("graph").getURI();
+    });
+  }
 }

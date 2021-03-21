@@ -47,7 +47,7 @@ public class FilteringService {
     log.info("set task status to busy...");
     taskService.updateTaskStatus(task, STATUS_BUSY, sparqlService);
 
-    var graphImportedTriples = "http://mu.semte.ch/graphs/harvesting/tasks/import/%s".formatted(task.getId());
+    var graphImportedTriples = taskService.selectInputContainerGraph(task, sparqlService);
 
     log.info("Graph to import from: '{}'", graphImportedTriples);
 
