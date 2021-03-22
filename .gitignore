@@ -36,3 +36,5 @@ mvnw*
 
 example/data/db/**
 example/data/filtering/**
+
+Scratch.java

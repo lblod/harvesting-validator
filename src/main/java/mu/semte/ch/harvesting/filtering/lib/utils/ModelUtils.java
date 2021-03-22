@@ -5,16 +5,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.graph.Node;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.rdf.model.impl.PropertyImpl;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RiotException;
-import org.apache.jena.riot.system.RiotLib;
-import org.apache.jena.shacl.vocabulary.SHACLM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,7 +106,7 @@ public interface ModelUtils {
     return bos.toByteArray();
   }
 
-  static Model replaceAnonNodes(Model model, String prefix){
+  static Model replaceAnonNodes(Model model, String prefix) {
     Model m = ModelFactory.createDefaultModel();
     model.listStatements().toList()
          .stream()
@@ -136,10 +130,10 @@ public interface ModelUtils {
   }
 
   static String blankNodeToIriString(Node node, String prefix) {
-      if ( node.isBlank() ) {
-        String x = node.getBlankNodeLabel();
-        return prefix + x;
-      }
+    if (node.isBlank()) {
+      String x = node.getBlankNodeLabel();
+      return prefix + x;
+    }
     if (node.isURI())
       return node.getURI();
     throw new RiotException("Not a blank node or URI");

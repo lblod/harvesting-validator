@@ -13,17 +13,17 @@ INSERT DATA {
         dct:creator <http://lblod.data.gift/services/harvesting-filter-service>;
         dct:created "%s"^^xsd:datetime;
         dct:modified "%s"^^xsd:datetime;
-        dct:format "text/turtle";
+        dct:format "application/n-triples";
         nfo:fileSize %s;
-        dbpedia:fileExtension "ttl".
+        dbpedia:fileExtension "nt".
                 <%s> a nfo:FileDataObject;
         mu:uuid "%s";
         nfo:fileName "%s" ;
         dct:creator <http://lblod.data.gift/services/harvesting-filter-service>;
         dct:created "%s"^^xsd:datetime;
         dct:modified "%s"^^xsd:datetime;
-        dct:format "text/turtle";
+        dct:format "application/n-triples";
         nfo:fileSize %s;
-        dbpedia:fileExtension "ttl" .
+        dbpedia:fileExtension "nt" .
     }
 }

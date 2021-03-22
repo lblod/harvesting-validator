@@ -54,16 +54,16 @@ public class TaskHelper {
       }
       var t = resultSet.next();
       Task task = Task.builder().task(t.getResource("task").getURI())
-                       .job(t.getResource("job").getURI())
-                       .error(ofNullable(t.getResource("error")).map(Resource::getURI).orElse(null))
-                       .id(t.getLiteral("id").getString())
-                       .created(t.getLiteral("created").getString())
-                       .modified(t.getLiteral("modified").getString())
-                       .operation(t.getResource("operation").getURI())
-                       .index(t.getLiteral("index").getString())
-                       .graph(t.getResource("graph").getURI())
-                       .status(t.getResource("status").getURI())
-                       .build();
+                      .job(t.getResource("job").getURI())
+                      .error(ofNullable(t.getResource("error")).map(Resource::getURI).orElse(null))
+                      .id(t.getLiteral("id").getString())
+                      .created(t.getLiteral("created").getString())
+                      .modified(t.getLiteral("modified").getString())
+                      .operation(t.getResource("operation").getURI())
+                      .index(t.getLiteral("index").getString())
+                      .graph(t.getResource("graph").getURI())
+                      .status(t.getResource("status").getURI())
+                      .build();
       log.debug("task: {}", task);
       return task;
     });
@@ -102,7 +102,8 @@ public class TaskHelper {
       catch (Exception e) {
         if (batchSize != 1) {
           importTriples(graph, batchModel, batchSize / 2);
-        }else {
+        }
+        else {
           log.debug("error while inserting triples", e);
           log.warn("INSERT of a triple failed: {}", ModelUtils.toString(batchModel, Lang.NTRIPLES));
           throw new RuntimeException(e.getMessage());
@@ -117,18 +118,19 @@ public class TaskHelper {
                              Model content,
                              String logicalFileName) {
     var phyId = uuid();
-    var phyFilename = "%s.ttl".formatted(phyId);
+    var phyFilename = "%s.nt".formatted(phyId);
     var path = "%s/%s".formatted(shareFolderPath, phyFilename);
     var physicalFile = "share://%s".formatted(phyFilename);
     var loId = uuid();
     var logicalFile = "%s/%s".formatted(LOGICAL_FILE_PREFIX, loId);
     var now = OffsetDateTime.now().toString();
     var file = new File(path);
-    content.write(new FileWriter(file), "TURTLE");
+    content.write(new FileWriter(file), "NTRIPLE");
     var fileSize = escapeNumber(file.length());
 
     var queryStr = queryStore.getQuery("writeTtlFile")
-                             .formatted(graph, physicalFile, logicalFile, phyId, phyFilename, now, now, fileSize, logicalFile, loId, logicalFileName, now, now, fileSize);
+                             .formatted(graph, physicalFile, logicalFile, phyId, phyFilename, now, now,
+                                        fileSize, logicalFile, loId, logicalFileName + ".nt", now, now, fileSize);
     sparqlClient.executeUpdateQuery(queryStr);
     return logicalFile;
   }

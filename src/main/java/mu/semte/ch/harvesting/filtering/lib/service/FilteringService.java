@@ -6,22 +6,18 @@ import mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils;
 import mu.semte.ch.harvesting.filtering.lib.utils.SparqlClient;
 import mu.semte.ch.harvesting.filtering.lib.utils.SparqlQueryStore;
 import mu.semte.ch.harvesting.filtering.lib.utils.TaskHelper;
-import org.apache.jena.datatypes.RDFDatatype;
-import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.shacl.vocabulary.SHACLM;
-import org.apache.jena.vocabulary.XSD;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
-import static mu.semte.ch.harvesting.filtering.lib.Constants.*;
+import static mu.semte.ch.harvesting.filtering.lib.Constants.FILTER_GRAPH_PREFIX;
+import static mu.semte.ch.harvesting.filtering.lib.Constants.REPORT_GRAPH_PREFIX;
+import static mu.semte.ch.harvesting.filtering.lib.Constants.STATUS_BUSY;
+import static mu.semte.ch.harvesting.filtering.lib.Constants.STATUS_FAILED;
+import static mu.semte.ch.harvesting.filtering.lib.Constants.STATUS_SUCCESS;
+import static mu.semte.ch.harvesting.filtering.lib.Constants.TASK_HARVESTING_FILTERING;
 
 @Service
 @Slf4j
@@ -71,7 +67,7 @@ public class FilteringService {
 
       // write original triples*************************************************************************************************
       var dataContainer = DataContainer.builder()
-                                       .graphUri(helper.writeTtlFile(task.getGraph(), importedTriples, "original.ttl"))
+                                       .graphUri(helper.writeTtlFile(task.getGraph(), importedTriples, "original"))
                                        .build();
       helper.appendTaskResultFile(task, dataContainer);
 
@@ -81,21 +77,21 @@ public class FilteringService {
       log.info("triples conforms: {}", report.conforms());
       var reportModel = ModelUtils.replaceAnonNodes(report.getModel(), REPORT_GRAPH_PREFIX);
 
-      dataContainer.setGraphUri(helper.writeTtlFile(task.getGraph(), reportModel, "validation-report.ttl"));
+      dataContainer.setGraphUri(helper.writeTtlFile(task.getGraph(), reportModel, "validation-report"));
       helper.appendTaskResultFile(task, dataContainer);
 
       // write filtered triples*************************************************************************************************
       log.info("filter non conform triples...");
       var filteredTriples = shaclService.filter(importedTriples, report);
 
-      dataContainer.setGraphUri(helper.writeTtlFile(task.getGraph(), filteredTriples, "filtered-triples.ttl"));
+      dataContainer.setGraphUri(helper.writeTtlFile(task.getGraph(), filteredTriples, "filtered-triples"));
       helper.appendTaskResultFile(task, dataContainer);
 
       // write errored triples**************************************************************************************************
       var errorTriples = importedTriples.difference(filteredTriples);
       log.info("Number of errored triples: {}", errorTriples.size());
 
-      dataContainer.setGraphUri(helper.writeTtlFile(task.getGraph(), errorTriples, "error-triples.ttl"));
+      dataContainer.setGraphUri(helper.writeTtlFile(task.getGraph(), errorTriples, "error-triples"));
       helper.appendTaskResultFile(task, dataContainer);
 
       // import filtered triples************************************************************************************************
