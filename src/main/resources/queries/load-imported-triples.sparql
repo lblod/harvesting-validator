@@ -10,7 +10,7 @@
  PREFIX cogs: <http://vocab.deri.ie/cogs#>
  PREFIX adms: <http://www.w3.org/ns/adms#>
 
- CONSTRUCT {?s ?p ?o} WHERE {
+ SELECT ?s ?p ?o WHERE {
                       GRAPH <%s> {
                            ?s ?p ?o
                       }

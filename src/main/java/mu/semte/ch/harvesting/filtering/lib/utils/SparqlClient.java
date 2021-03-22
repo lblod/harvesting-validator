@@ -56,15 +56,10 @@ public class SparqlClient {
       return resultHandler.apply(queryExecution.execSelect());
     }
   }
-
-  // todo workaround to bypass mu-auth response not returning rdf data
-  // https://github.com/mu-semtech/mu-authorization/issues/4
-  public Model executeConstructQueryResultAsSparqlJson(String query) {
-    log.debug(query);
-    try (QueryExecution queryExecution = QueryExecutionFactory.sparqlService(url, query, buildHttpClient())) {
-      var result = queryExecution.execSelect();
+  public Model executeSelectQuery(String query) {
+    return executeSelectQuery(query, resultSet -> {
       Model model = ModelFactory.createDefaultModel();
-      result.forEachRemaining(querySolution -> {
+      resultSet.forEachRemaining(querySolution -> {
         RDFNode subject = querySolution.get("s");
         RDFNode predicate = querySolution.get("p");
         RDFNode object = querySolution.get("o");
@@ -72,7 +67,7 @@ public class SparqlClient {
         model.getGraph().add(triple);
       });
       return model;
-    }
+    });
   }
 
   public boolean executeAskQuery(String askQuery) {
