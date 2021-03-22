@@ -1,5 +1,6 @@
 package mu.semte.ch.harvesting.filtering.lib.utils;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,18 +15,18 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.riot.Lang;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 import static mu.semte.ch.harvesting.filtering.lib.Constants.ERROR_URI_PREFIX;
 import static mu.semte.ch.harvesting.filtering.lib.Constants.LOGICAL_FILE_PREFIX;
-import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.escapeNumber;
+import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.formattedDate;
 import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.uuid;
 
 @Data
@@ -77,7 +78,7 @@ public class TaskHelper {
 
   public void updateTaskStatus(Task task, String status) {
     String queryUpdate = queryStore.getQuery("updateTaskStatus")
-                                   .formatted(status, OffsetDateTime.now().toString(), task.getTask());
+                                   .formatted(status, formattedDate(LocalDateTime.now()), task.getTask());
     sparqlClient.executeUpdateQuery(queryUpdate);
   }
 
@@ -110,14 +111,24 @@ public class TaskHelper {
     var physicalFile = "share://%s".formatted(phyFilename);
     var loId = uuid();
     var logicalFile = "%s/%s".formatted(LOGICAL_FILE_PREFIX, loId);
-    var now = OffsetDateTime.now().toString();
+    var now = formattedDate(LocalDateTime.now());
     var file = new File(path);
     content.write(new FileWriter(file), "NTRIPLE");
-    var fileSize = escapeNumber(file.length());
+    var fileSize = file.length();
+    var queryParameters = ImmutableMap.<String, Object>builder()
+                                      .put("graph", graph)
+                                      .put("physicalFile", physicalFile)
+                                      .put("logicalFile", logicalFile)
+                                      .put("phyId", phyId)
+                                      .put("phyFilename", phyFilename)
+                                      .put("now", now)
+                                      .put("fileSize", fileSize)
+                                      .put("loId", loId)
+                                      .put("logicalFileName", logicalFileName + ".nt")
+                                      .put("fileExtension", "nt")
+                                      .put("contentType", "application/n-triples").build();
 
-    var queryStr = queryStore.getQuery("writeTtlFile")
-                             .formatted(graph, physicalFile, logicalFile, phyId, phyFilename, now, now,
-                                        fileSize, logicalFile, loId, logicalFileName + ".nt", now, now, fileSize);
+    var queryStr = queryStore.getQueryWithParameters("writeTtlFile",queryParameters);
     sparqlClient.executeUpdateQuery(queryStr);
     return logicalFile;
   }
@@ -127,9 +138,13 @@ public class TaskHelper {
     var containerUri = dataContainer.getUri();
     var containerId = dataContainer.getId();
     var fileUri = dataContainer.getGraphUri();
-    var queryStr = queryStore.getQuery("appendTaskResultFile")
-                             .formatted(task.getGraph(), containerUri, containerUri, containerId, containerUri, fileUri, task
-                                     .getTask(), containerUri);
+    var queryParameters = Map.of(
+            "containerUri", containerUri,
+            "containerId", containerId,
+            "fileUri", fileUri, "task", task
+    );
+    var queryStr = queryStore.getQueryWithParameters("appendTaskResultFile",queryParameters);
+
     sparqlClient.executeUpdateQuery(queryStr);
 
   }
@@ -139,9 +154,13 @@ public class TaskHelper {
     var graphContainerUri = dataContainer.getUri();
     var graphContainerId = dataContainer.getId();
     var filteredGraph = dataContainer.getGraphUri();
-    var queryStr = queryStore.getQuery("appendTaskResultGraph")
-                             .formatted(task.getGraph(), graphContainerUri, graphContainerUri, graphContainerId, graphContainerUri, filteredGraph, task
-                                     .getTask(), graphContainerUri);
+    var queryParameters = Map.of(
+            "graphContainerUri", graphContainerUri,
+            "graphContainerId", graphContainerId,
+            "filteredGraph", filteredGraph,
+            "task", task
+    );
+    var queryStr = queryStore.getQueryWithParameters("appendTaskResultGraph", queryParameters);
     log.debug(queryStr);
     sparqlClient.executeUpdateQuery(queryStr);
 
@@ -163,8 +182,9 @@ public class TaskHelper {
     var id = uuid();
     var uri = ERROR_URI_PREFIX + id;
 
-    var queryStr = queryStore.getQuery("appendTaskError")
-                             .formatted(task.getGraph(), uri, id, message, task.getTask(), uri);
+    Map<String, Object> parameters = Map.of("task", task, "id", id, "uri", uri, "message", message);
+    var queryStr = queryStore.getQueryWithParameters("appendTaskError", parameters);
+
     sparqlClient.executeUpdateQuery(queryStr);
   }
 }

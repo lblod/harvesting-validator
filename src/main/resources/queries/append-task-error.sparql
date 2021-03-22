@@ -11,10 +11,10 @@ PREFIX cogs: <http://vocab.deri.ie/cogs#>
 PREFIX adms: <http://www.w3.org/ns/adms#>
 
 INSERT DATA {
-    GRAPH <%s>{
-      <%s> a oslc:Error;
-        mu:uuid "%s";
-        oslc:message "%s".
-      <%s> task:error <%s>.
+    GRAPH <${task.graph}>{
+      <${uri}> a oslc:Error;
+        mu:uuid "${id}";
+        oslc:message "${message}".
+      <${task.task}> task:error <${uri}>.
     }
 }

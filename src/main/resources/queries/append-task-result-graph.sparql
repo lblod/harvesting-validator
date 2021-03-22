@@ -3,10 +3,10 @@ PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
 PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
 PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
 INSERT DATA {
-    GRAPH <%s> {
-        <%s> a nfo:DataContainer.
-        <%s> mu:uuid "%s".
-        <%s> task:hasGraph <%s>.
-        <%s> task:resultsContainer <%s>
+    GRAPH <${task.graph}> {
+        <${graphContainerUri}> a nfo:DataContainer.
+        <${graphContainerUri}> mu:uuid "${graphContainerId}".
+        <${graphContainerUri}> task:hasGraph <${filteredGraph}>.
+        <${task.task}> task:resultsContainer <${graphContainerUri}>
     }
 }

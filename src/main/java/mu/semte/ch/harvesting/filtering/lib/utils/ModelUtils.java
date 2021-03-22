@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -37,14 +39,8 @@ public interface ModelUtils {
     return StringUtils.substring(UUID.randomUUID().toString(), 0, 32);
   }
 
-  static String escapeNumber(long number) {
-    return "\"%s\"^^xsd:integer".formatted(number);
-  }
-
-  static Calendar dateToCalendar(Date date) {
-    Calendar calendar = new GregorianCalendar();
-    calendar.setTime(date);
-    return calendar;
+  static String formattedDate(LocalDateTime ldt){
+    return DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.000'Z'").format(ldt);
   }
 
   static boolean equals(Model firstModel, Model secondModel) {

@@ -5,25 +5,25 @@ PREFIX dct: <http://purl.org/dc/terms/>
 PREFIX dbpedia: <http://dbpedia.org/ontology/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 INSERT DATA {
-    GRAPH <%s> {
-        <%s> a nfo:FileDataObject;
-        nie:dataSource <%s> ;
-        mu:uuid "%s";
-        nfo:fileName "%s" ;
+    GRAPH <${graph}> {
+        <${physicalFile}> a nfo:FileDataObject;
+        nie:dataSource <${logicalFile}> ;
+        mu:uuid "${phyId}";
+        nfo:fileName "${phyFilename}" ;
         dct:creator <http://lblod.data.gift/services/harvesting-filter-service>;
-        dct:created "%s"^^xsd:datetime;
-        dct:modified "%s"^^xsd:datetime;
-        dct:format "application/n-triples";
-        nfo:fileSize %s;
-        dbpedia:fileExtension "nt".
-                <%s> a nfo:FileDataObject;
-        mu:uuid "%s";
-        nfo:fileName "%s" ;
+        dct:created "${now}"^^xsd:datetime;
+        dct:modified "${now}"^^xsd:datetime;
+        dct:format "${contentType}";
+        nfo:fileSize "${fileSize}"^^xsd:integer;
+        dbpedia:fileExtension "${fileExtension}".
+                <${logicalFile}> a nfo:FileDataObject;
+        mu:uuid "${loId}";
+        nfo:fileName "${logicalFileName}" ;
         dct:creator <http://lblod.data.gift/services/harvesting-filter-service>;
-        dct:created "%s"^^xsd:datetime;
-        dct:modified "%s"^^xsd:datetime;
-        dct:format "application/n-triples";
-        nfo:fileSize %s;
-        dbpedia:fileExtension "nt" .
+        dct:created "${now}"^^xsd:datetime;
+        dct:modified "${now}"^^xsd:datetime;
+        dct:format "${contentType}";
+        nfo:fileSize "${fileSize}"^^xsd:integer;
+        dbpedia:fileExtension "${fileExtension}" .
     }
 }
