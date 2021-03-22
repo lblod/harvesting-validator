@@ -96,20 +96,7 @@ public class TaskHelper {
                        })
                        .collect(Collectors.toList());
     for (var batchModel : batches) {
-      try {
         sparqlClient.insertModel(graph, batchModel);
-      }
-      catch (Exception e) {
-        if (batchSize != 1) {
-          importTriples(graph, batchModel, batchSize / 2);
-        }
-        else {
-          log.debug("error while inserting triples", e);
-          log.warn("INSERT of a triple failed: {}", ModelUtils.toString(batchModel, Lang.NTRIPLES));
-          throw new RuntimeException(e.getMessage());
-        }
-
-      }
     }
   }
 

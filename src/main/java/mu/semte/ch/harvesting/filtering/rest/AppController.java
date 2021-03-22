@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Optional.ofNullable;
@@ -30,12 +31,13 @@ public class AppController {
   }
 
   @PostMapping("/delta")
-  public ResponseEntity<Void> delta(@RequestBody Delta delta, HttpServletRequest request) {
+  public ResponseEntity<Void> delta(@RequestBody List<Delta> deltas, HttpServletRequest request) {
     Map<String, String> muHeaders = new HashMap<>();
     ofNullable(request.getHeader(HEADER_MU_CALL_ID)).ifPresent(h -> muHeaders.put(HEADER_MU_CALL_ID, h));
     ofNullable(request.getHeader(HEADER_MU_SESSION_ID)).ifPresent(h -> muHeaders.put(HEADER_MU_SESSION_ID, h));
     muHeaders.put(HEADER_MU_AUTH_SUDO, "true");
-    var entries = delta.getInsertsFor(SUBJECT_STATUS, STATUS_SCHEDULED);
+    var entries = deltas.stream().findFirst().map(delta -> delta.getInsertsFor(SUBJECT_STATUS, STATUS_SCHEDULED))
+    .orElseGet(List::of);
 
     if (entries.isEmpty()) {
       log.error("Delta dit not contain potential tasks that are ready for filtering, awaiting the next batch!");

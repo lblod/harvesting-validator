@@ -14,6 +14,7 @@ import java.util.Map;
 
 import static mu.semte.ch.harvesting.filtering.lib.Constants.FILTER_GRAPH_PREFIX;
 import static mu.semte.ch.harvesting.filtering.lib.Constants.REPORT_GRAPH_PREFIX;
+import static mu.semte.ch.harvesting.filtering.lib.Constants.BLANK_NODE_SUBSTITUTE;
 import static mu.semte.ch.harvesting.filtering.lib.Constants.STATUS_BUSY;
 import static mu.semte.ch.harvesting.filtering.lib.Constants.STATUS_FAILED;
 import static mu.semte.ch.harvesting.filtering.lib.Constants.STATUS_SUCCESS;
@@ -56,7 +57,6 @@ public class FilteringService {
     if (task == null || !task.getOperation().contains(TASK_HARVESTING_FILTERING)) return;
 
     try {
-
       // fetch triples from input container ************************************************************************************
       log.info("set task status to busy...");
       helper.updateTaskStatus(task, STATUS_BUSY);
@@ -65,19 +65,15 @@ public class FilteringService {
 
       var importedTriples = helper.loadImportedTriples(graphImportedTriples);
 
-      // write original triples*************************************************************************************************
-      var dataContainer = DataContainer.builder()
-                                       .graphUri(helper.writeTtlFile(task.getGraph(), importedTriples, "original"))
-                                       .build();
-      helper.appendTaskResultFile(task, dataContainer);
 
       // write shacl report*****************************************************************************************************
       log.info("generate validation reports...");
       var report = shaclService.validate(importedTriples.getGraph());
       log.info("triples conforms: {}", report.conforms());
-      var reportModel = ModelUtils.replaceAnonNodes(report.getModel(), REPORT_GRAPH_PREFIX);
-
-      dataContainer.setGraphUri(helper.writeTtlFile(task.getGraph(), reportModel, "validation-report"));
+      var reportModel = ModelUtils.replaceAnonNodes(report.getModel(), BLANK_NODE_SUBSTITUTE);
+      var dataContainer = DataContainer.builder()
+                                       .graphUri(helper.writeTtlFile(task.getGraph(), reportModel, "validation-report"))
+                                       .build();
       helper.appendTaskResultFile(task, dataContainer);
 
       // write filtered triples*************************************************************************************************
@@ -99,13 +95,18 @@ public class FilteringService {
 
       helper.importTriples(filteredGraph, filteredTriples, defaultBatchSize);
 
-      // import report triples************************************************************************************************
-      helper.importTriples(task.getGraph(), reportModel, defaultBatchSize);
+      // import report triples**************************************************************************************************
+      var validationReportGraph = "%s/%s".formatted(REPORT_GRAPH_PREFIX, task.getId());
+
+      helper.importTriples(validationReportGraph, reportModel, defaultBatchSize);
 
       // append result graph****************************************************************************************************
       var graphContainer = DataContainer.builder()
                                         .graphUri(filteredGraph)
                                         .build();
+      helper.appendTaskResultGraph(task, graphContainer);
+
+      graphContainer.setGraphUri(filteredGraph);
       helper.appendTaskResultGraph(task, graphContainer);
 
       // Status success*********************************************************************************************************
