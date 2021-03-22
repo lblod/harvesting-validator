@@ -11,8 +11,8 @@ INSERT DATA {
         mu:uuid "${phyId}";
         nfo:fileName "${phyFilename}" ;
         dct:creator <http://lblod.data.gift/services/harvesting-filter-service>;
-        dct:created "${now}"^^xsd:datetime;
-        dct:modified "${now}"^^xsd:datetime;
+        dct:created "${now}"^^xsd:dateTime;
+        dct:modified "${now}"^^xsd:dateTime;
         dct:format "${contentType}";
         nfo:fileSize "${fileSize}"^^xsd:integer;
         dbpedia:fileExtension "${fileExtension}".
@@ -20,8 +20,8 @@ INSERT DATA {
         mu:uuid "${loId}";
         nfo:fileName "${logicalFileName}" ;
         dct:creator <http://lblod.data.gift/services/harvesting-filter-service>;
-        dct:created "${now}"^^xsd:datetime;
-        dct:modified "${now}"^^xsd:datetime;
+        dct:created "${now}"^^xsd:dateTime;
+        dct:modified "${now}"^^xsd:dateTime;
         dct:format "${contentType}";
         nfo:fileSize "${fileSize}"^^xsd:integer;
         dbpedia:fileExtension "${fileExtension}" .
