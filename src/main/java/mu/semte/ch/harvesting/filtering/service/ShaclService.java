@@ -50,6 +50,10 @@ public class ShaclService {
     return filter(dataGraph, shapes, report);
   }
 
+  public ValidationReport fromModel(Model report) {
+    return ValidationReport.fromModel(report);
+  }
+
   public Model filter(Model model, ValidationReport report) {
     Model copy = ModelFactory.createDefaultModel();
     copy.add(model);

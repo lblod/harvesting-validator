@@ -3,18 +3,11 @@ package mu.semte.ch.harvesting.filtering.service;
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.harvesting.filtering.lib.dto.DataContainer;
 import mu.semte.ch.harvesting.filtering.lib.dto.Task;
-import mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.shacl.ValidationReport;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import static mu.semte.ch.harvesting.filtering.Constants.FILTER_GRAPH_PREFIX;
-import static mu.semte.ch.harvesting.filtering.Constants.STATUS_BUSY;
-import static mu.semte.ch.harvesting.filtering.Constants.STATUS_FAILED;
-import static mu.semte.ch.harvesting.filtering.Constants.STATUS_SUCCESS;
-import static mu.semte.ch.harvesting.filtering.Constants.TASK_HARVESTING_FILTERING;
 
 @Service
 @Slf4j
@@ -23,55 +16,33 @@ public class FilteringService {
   private final ShaclService shaclService;
   private final TaskService taskService;
 
-  @Value("${sparql.defaultBatchSize}")
-  private int defaultBatchSize;
-
-
-  public FilteringService(ShaclService shaclService,TaskService taskService) {
+  public FilteringService(ShaclService shaclService, TaskService taskService) {
     this.shaclService = shaclService;
     this.taskService = taskService;
   }
 
-  @Async
-  public void runFilterPipeline(String deltaEntry) {
-    // validate task
-    if (!taskService.isTask(deltaEntry)) return;
-    var task = taskService.loadTask(deltaEntry);
-    if (task == null || !task.getOperation().contains(TASK_HARVESTING_FILTERING)) return;
+  public void runFilterPipeline(Task task) {
+    var inputContainer = taskService.selectInputContainer(task).get(0);
+    log.debug("input container: {}", inputContainer);
+    var importedTriples = fetchTriplesFromInputContainer(inputContainer.getGraphUri());
+    var fileContainer = DataContainer.builder().build();
 
-    try {
-      taskService.updateTaskStatus(task, STATUS_BUSY);
+    var report = fetchTriplesFromInputContainer(inputContainer.getValidationGraphUri());
 
-      var importedTriples = fetchTriplesFromInputContainer(task);
-      var fileContainer = DataContainer.builder().build();
+    var validTriples = writeValidTriples(task, fileContainer, shaclService.fromModel(report), importedTriples);
 
-      var report = writeValidationReport(task, fileContainer, importedTriples);
+    writeErrorTriples(task, fileContainer, importedTriples, validTriples);
 
-      var validTriples = writeValidTriples(task, fileContainer, report, importedTriples);
+    // import filtered triples
+    var filteredGraph = "%s/%s".formatted(FILTER_GRAPH_PREFIX, task.getId());
 
-      writeErrorTriples(task, fileContainer, importedTriples, validTriples);
+    taskService.importTriples(filteredGraph, validTriples);
 
-      // import filtered triples
-      var filteredGraph = "%s/%s".formatted(FILTER_GRAPH_PREFIX, task.getId());
-
-      taskService.importTriples(filteredGraph, validTriples, defaultBatchSize);
-
-      // append result graph
-      var graphContainer = DataContainer.builder()
-                                        .graphUri(filteredGraph)
-                                        .build();
-      taskService.appendTaskResultGraph(task, graphContainer);
-
-      // success
-      taskService.updateTaskStatus(task, STATUS_SUCCESS);
-      log.debug("Done with success for task {}", task.getId());
-    }
-    catch (Exception e) {
-      log.error("Error while running filtering:", e);
-      taskService.appendTaskError(task, e.getMessage());
-      taskService.updateTaskStatus(task, STATUS_FAILED);
-    }
-
+    // append result graph
+    var graphContainer = DataContainer.builder()
+                                      .graphUri(filteredGraph)
+                                      .build();
+    taskService.appendTaskResultGraph(task, graphContainer);
   }
 
   private void writeErrorTriples(Task task, DataContainer fileContainer, Model importedTriples, Model validTriples) {
@@ -88,29 +59,15 @@ public class FilteringService {
     log.debug("filter non conform triples...");
     var validTriples = shaclService.filter(importedTriples, report);
     var dataContainer = fileContainer.toBuilder()
-                         .graphUri(taskService.writeTtlFile(task.getGraph(), validTriples, "valid-triples.ttl"))
-                          .build();
+                                     .graphUri(taskService.writeTtlFile(task.getGraph(), validTriples, "valid-triples.ttl"))
+                                     .build();
     taskService.appendTaskResultFile(task, dataContainer);
     return validTriples;
   }
 
-  private ValidationReport writeValidationReport(Task task, DataContainer fileContainer, Model importedTriples) {
-    log.debug("generate validation reports...");
-    var report = shaclService.validate(importedTriples.getGraph());
-    log.debug("triples conforms: {}", report.conforms());
-    var reportModel = ModelUtils.replaceAnonNodes(report.getModel(), "report");
-    var dataContainer = fileContainer.toBuilder()
-                                     .graphUri(taskService.writeTtlFile(task.getGraph(), reportModel, "validation-report.ttl"))
-                                     .build();
-    taskService.appendTaskResultFile(task, dataContainer);
-    return report;
-  }
 
-  private Model fetchTriplesFromInputContainer(Task task) {
-
-    var graphImportedTriples = taskService.selectInputContainerGraph(task);
-
-    return  taskService.loadImportedTriples(graphImportedTriples);
+  private Model fetchTriplesFromInputContainer(String graphUri) {
+    return taskService.loadImportedTriples(graphUri);
   }
 
 

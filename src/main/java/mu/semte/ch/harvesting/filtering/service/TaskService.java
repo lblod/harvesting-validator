@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -25,17 +26,22 @@ import java.util.stream.Collectors;
 import static java.util.Optional.ofNullable;
 import static mu.semte.ch.harvesting.filtering.Constants.ERROR_URI_PREFIX;
 import static mu.semte.ch.harvesting.filtering.Constants.LOGICAL_FILE_PREFIX;
-import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.*;
+import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.filenameToLang;
+import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.formattedDate;
+import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.getContentType;
+import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.getExtension;
+import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.uuid;
 
 @Service
 @Slf4j
 public class TaskService {
 
-  @Value("${share-folder.path}")
-  private String shareFolderPath;
-
   private final SparqlQueryStore queryStore;
   private final SparqlClient sparqlClient;
+  @Value("${share-folder.path}")
+  private String shareFolderPath;
+  @Value("${sparql.defaultBatchSize}")
+  private int defaultBatchSize;
 
   public TaskService(SparqlQueryStore queryStore, SparqlClient sparqlClient) {
     this.queryStore = queryStore;
@@ -88,11 +94,10 @@ public class TaskService {
   }
 
   public void importTriples(String graph,
-                            Model model,
-                            int batchSize) {
-    log.debug("running import triples with batch size {}, model size: {}, graph: <{}>", batchSize, model.size(), graph);
+                            Model model) {
+    log.debug("running import triples with batch size {}, model size: {}, graph: <{}>", defaultBatchSize, model.size(), graph);
     List<Triple> triples = model.getGraph().find().toList(); //duplicate so we can splice
-    var batches = Lists.partition(triples, batchSize)
+    var batches = Lists.partition(triples, defaultBatchSize)
                        .stream()
                        .map(batch -> {
                          Model batchModel = ModelFactory.createDefaultModel();
@@ -102,7 +107,7 @@ public class TaskService {
                        })
                        .collect(Collectors.toList());
     for (var batchModel : batches) {
-        sparqlClient.insertModel(graph, batchModel);
+      sparqlClient.insertModel(graph, batchModel);
     }
   }
 
@@ -123,19 +128,19 @@ public class TaskService {
     var file = ModelUtils.toFile(content, rdfLang, path);
     var fileSize = file.length();
     var queryParameters = ImmutableMap.<String, Object>builder()
-                                      .put("graph", graph)
-                                      .put("physicalFile", physicalFile)
-                                      .put("logicalFile", logicalFile)
-                                      .put("phyId", phyId)
-                                      .put("phyFilename", phyFilename)
-                                      .put("now", now)
-                                      .put("fileSize", fileSize)
-                                      .put("loId", loId)
-                                      .put("logicalFileName", logicalFileName)
-                                      .put("fileExtension", "nt")
-                                      .put("contentType", contentType).build();
+            .put("graph", graph)
+            .put("physicalFile", physicalFile)
+            .put("logicalFile", logicalFile)
+            .put("phyId", phyId)
+            .put("phyFilename", phyFilename)
+            .put("now", now)
+            .put("fileSize", fileSize)
+            .put("loId", loId)
+            .put("logicalFileName", logicalFileName)
+            .put("fileExtension", "nt")
+            .put("contentType", contentType).build();
 
-    var queryStr = queryStore.getQueryWithParameters("writeTtlFile",queryParameters);
+    var queryStr = queryStore.getQueryWithParameters("writeTtlFile", queryParameters);
     sparqlClient.executeUpdateQuery(queryStr);
     return logicalFile;
   }
@@ -150,21 +155,16 @@ public class TaskService {
             "containerId", containerId,
             "fileUri", fileUri, "task", task
     );
-    var queryStr = queryStore.getQueryWithParameters("appendTaskResultFile",queryParameters);
+    var queryStr = queryStore.getQueryWithParameters("appendTaskResultFile", queryParameters);
 
     sparqlClient.executeUpdateQuery(queryStr);
   }
 
   public void appendTaskResultGraph(Task task,
                                     DataContainer dataContainer) {
-    var graphContainerUri = dataContainer.getUri();
-    var graphContainerId = dataContainer.getId();
-    var filteredGraph = dataContainer.getGraphUri();
     var queryParameters = Map.of(
-            "graphContainerUri", graphContainerUri,
-            "graphContainerId", graphContainerId,
-            "filteredGraph", filteredGraph,
-            "task", task
+            "task", task,
+            "dataContainer", dataContainer
     );
     var queryStr = queryStore.getQueryWithParameters("appendTaskResultGraph", queryParameters);
     log.debug(queryStr);
@@ -172,15 +172,21 @@ public class TaskService {
 
   }
 
-  public String selectInputContainerGraph(Task task) {
+  public List<DataContainer> selectInputContainer(Task task) {
     String queryTask = queryStore.getQuery("selectInputContainerGraph").formatted(task.getTask());
 
     return sparqlClient.executeSelectQuery(queryTask, resultSet -> {
       if (!resultSet.hasNext()) {
         throw new RuntimeException("Input container graph not found");
       }
-      var t = resultSet.next();
-      return t.getResource("graph").getURI();
+      List<DataContainer> graphUris = new ArrayList<>();
+      resultSet.forEachRemaining(r -> graphUris.add(DataContainer.builder()
+                                                                 .graphUri(r.getResource("graph").getURI())
+                                                                 .validationGraphUri(ofNullable(r.getResource("validationGraph"))
+                                                                                             .map(Resource::getURI)
+                                                                                             .orElse(null))
+                                                                 .build()));
+      return graphUris;
     });
   }
 
@@ -193,4 +199,5 @@ public class TaskService {
 
     sparqlClient.executeUpdateQuery(queryStr);
   }
+
 }

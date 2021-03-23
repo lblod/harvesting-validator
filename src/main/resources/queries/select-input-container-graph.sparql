@@ -10,10 +10,10 @@
   PREFIX cogs: <http://vocab.deri.ie/cogs#>
   PREFIX adms: <http://www.w3.org/ns/adms#>
 
-  SELECT DISTINCT ?graph WHERE {
+  SELECT DISTINCT ?graph ?validationGraph WHERE {
         GRAPH ?g {
-          BIND(<%s> as ?task).
-          ?task task:inputContainer ?container.
+          <%s> task:inputContainer ?container.
           ?container task:hasGraph ?graph.
+          OPTIONAL {?container task:hasValidationGraph ?validationGraph}
         }
   }

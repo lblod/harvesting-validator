@@ -2,7 +2,7 @@ package mu.semte.ch.harvesting.filtering.rest;
 
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.harvesting.filtering.lib.dto.Delta;
-import mu.semte.ch.harvesting.filtering.service.FilteringService;
+import mu.semte.ch.harvesting.filtering.service.PipelineService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,16 +18,16 @@ import static mu.semte.ch.harvesting.filtering.Constants.SUBJECT_STATUS;
 @Slf4j
 public class AppController {
 
-  private final FilteringService filteringService;
+  private final PipelineService pipelineService;
 
-  public AppController(FilteringService filteringService) {
-    this.filteringService = filteringService;
+  public AppController(PipelineService pipelineService) {
+    this.pipelineService = pipelineService;
   }
 
   @PostMapping("/delta")
   public ResponseEntity<Void> delta(@RequestBody List<Delta> deltas, HttpServletRequest request) {
     var entries = deltas.stream().findFirst().map(delta -> delta.getInsertsFor(SUBJECT_STATUS, STATUS_SCHEDULED))
-    .orElseGet(List::of);
+                        .orElseGet(List::of);
 
     if (entries.isEmpty()) {
       log.error("Delta dit not contain potential tasks that are ready for filtering, awaiting the next batch!");
@@ -36,7 +36,7 @@ public class AppController {
     }
 
     // NOTE: we don't wait as we do not want to keep hold off the connection.
-    entries.forEach(filteringService::runFilterPipeline);
+    entries.forEach(pipelineService::runPipeline);
 
     return ResponseEntity.ok().build();
   }

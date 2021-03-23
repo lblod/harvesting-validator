@@ -4,9 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.harvesting.filtering.lib.utils.SparqlClient;
 import mu.semte.ch.harvesting.filtering.lib.utils.SparqlQueryStore;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.shacl.Shapes;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +18,7 @@ import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -62,12 +67,20 @@ public class ApplicationConfig {
   }
 
   @Bean
-  public SparqlClient defaultSudoSparqlClient(){
+  @Autowired
+  public SparqlClient defaultSudoSparqlClient(CloseableHttpClient closeableHttpClient) {
     return SparqlClient.builder()
-                .url(sparqlUrl)
-                .httpHeaders(Map.of(HEADER_MU_AUTH_SUDO, "true"))
-                .build();
+                       .url(sparqlUrl)
+                       .httpClient(closeableHttpClient)
+                       .build();
   }
 
+  @Bean(destroyMethod = "close")
+  public CloseableHttpClient buildHttpClient() {
+    return HttpClients.custom()
+                      .setDefaultHeaders(List.of(new BasicHeader(HEADER_MU_AUTH_SUDO, "true")))
+                      .build();
+
+  }
 
 }

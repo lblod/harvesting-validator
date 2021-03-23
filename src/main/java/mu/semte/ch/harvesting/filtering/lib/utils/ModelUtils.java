@@ -10,8 +10,6 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RiotException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -22,9 +20,6 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.UUID;
 
 
@@ -40,7 +35,7 @@ public interface ModelUtils {
     return StringUtils.substring(UUID.randomUUID().toString(), 0, 32);
   }
 
-  static String formattedDate(LocalDateTime ldt){
+  static String formattedDate(LocalDateTime ldt) {
     return DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.000'Z'").format(ldt);
   }
 
@@ -82,6 +77,7 @@ public interface ModelUtils {
   static String getContentType(String lang) {
     return getContentType(getRdfLanguage(lang));
   }
+
   static String getContentType(Lang lang) {
     return lang.getContentType().getContentTypeStr();
   }
@@ -89,6 +85,7 @@ public interface ModelUtils {
   static String getExtension(String lang) {
     return getExtension(getRdfLanguage(lang));
   }
+
   static String getExtension(Lang lang) {
     return lang.getFileExtensions().stream().findFirst().orElse("txt");
   }
@@ -135,7 +132,7 @@ public interface ModelUtils {
   static String blankNodeToIriString(Node node, String prefix) {
     if (node.isBlank()) {
       String label = node.getBlankNodeLabel();
-      return "%s/%s/%s".formatted(WELL_KNOWN_PREFIX,prefix,label);
+      return "%s/%s/%s".formatted(WELL_KNOWN_PREFIX, prefix, label);
     }
     if (node.isURI())
       return node.getURI();

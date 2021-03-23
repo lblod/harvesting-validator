@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.uuid;
 
 @Data
@@ -16,6 +17,7 @@ public class DataContainer {
   @Builder.Default
   private String id = uuid();
   private String graphUri;
+  private String validationGraphUri;
 
   public String getUri() {
     return "%s/%s".formatted(DATA_CONTAINER_PREFIX, id);
