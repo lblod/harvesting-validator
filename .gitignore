@@ -34,7 +34,6 @@ mvnw*
 .mvn/
 
 
-example/data/db/**
-example/data/filtering/**
+test/data/**
 
 Scratch.java
