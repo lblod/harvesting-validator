@@ -45,8 +45,8 @@ services:
   filtering:
     build: ../
     volumes:
-      - ./config:/config
-      - ./data/filtering:/share
+      - ./config/validation:/config
+      - ./data/files:/share
     environment:
       SERVER_PORT: "80" # optionals
       SHARE_FOLDER_DIRECTORY: "/share" # optionals

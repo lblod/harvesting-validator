@@ -12,12 +12,38 @@ Validate and filter based on a single shacl application profile.
 - Add your Shacl profile `./config/validation/application-profile.ttl`
 - Add the service to your docker-compose:
 ```
-  filtering:
+  validation:
     image: lblod/app-poc-harvesting-filtering-service
     volumes:
       - ./config/validation:/config
       - ./data/files:/share
 
+```
+
+- add delta rule:
+
+```
+  {
+    match: {
+      predicate: {
+        type: 'uri',
+        value: 'http://www.w3.org/ns/adms#status'
+      },
+      object: {
+        type: 'uri',
+        value: 'http://redpencil.data.gift/id/concept/JobStatus/scheduled'
+      }
+    },
+    callback: {
+      method: 'POST',
+      url: 'http://validation/delta'
+    },
+    options: {
+      resourceFormat: 'v0.0.1',
+      gracePeriod: 1000,
+      ignoreFromSelf: true
+    }
+  }
 ```
 
 
