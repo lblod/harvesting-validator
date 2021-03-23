@@ -1,4 +1,4 @@
-package mu.semte.ch.harvesting.filtering.lib.service;
+package mu.semte.ch.harvesting.filtering.service;
 
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.harvesting.filtering.lib.dto.DataContainer;
@@ -10,12 +10,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import static mu.semte.ch.harvesting.filtering.lib.Constants.FILTER_GRAPH_PREFIX;
-import static mu.semte.ch.harvesting.filtering.lib.Constants.BLANK_NODE_SUBSTITUTE;
-import static mu.semte.ch.harvesting.filtering.lib.Constants.STATUS_BUSY;
-import static mu.semte.ch.harvesting.filtering.lib.Constants.STATUS_FAILED;
-import static mu.semte.ch.harvesting.filtering.lib.Constants.STATUS_SUCCESS;
-import static mu.semte.ch.harvesting.filtering.lib.Constants.TASK_HARVESTING_FILTERING;
+import static mu.semte.ch.harvesting.filtering.Constants.FILTER_GRAPH_PREFIX;
+import static mu.semte.ch.harvesting.filtering.Constants.STATUS_BUSY;
+import static mu.semte.ch.harvesting.filtering.Constants.STATUS_FAILED;
+import static mu.semte.ch.harvesting.filtering.Constants.STATUS_SUCCESS;
+import static mu.semte.ch.harvesting.filtering.Constants.TASK_HARVESTING_FILTERING;
 
 @Service
 @Slf4j
@@ -99,7 +98,7 @@ public class FilteringService {
     log.debug("generate validation reports...");
     var report = shaclService.validate(importedTriples.getGraph());
     log.debug("triples conforms: {}", report.conforms());
-    var reportModel = ModelUtils.replaceAnonNodes(report.getModel(), BLANK_NODE_SUBSTITUTE);
+    var reportModel = ModelUtils.replaceAnonNodes(report.getModel(), "report");
     var dataContainer = fileContainer.toBuilder()
                                      .graphUri(taskService.writeTtlFile(task.getGraph(), reportModel, "validation-report.ttl"))
                                      .build();

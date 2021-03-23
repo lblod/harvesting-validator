@@ -1,4 +1,4 @@
-package mu.semte.ch.harvesting.filtering.lib;
+package mu.semte.ch.harvesting.filtering;
 
 public interface Constants {
   String TASK_HARVESTING_FILTERING = "http://lblod.data.gift/id/jobs/concept/TaskOperation/filtering";
@@ -8,16 +8,11 @@ public interface Constants {
   String STATUS_SCHEDULED = "http://redpencil.data.gift/id/concept/JobStatus/scheduled";
   String STATUS_SUCCESS = "http://redpencil.data.gift/id/concept/JobStatus/success";
   String STATUS_FAILED = "http://redpencil.data.gift/id/concept/JobStatus/failed";
-  String BLANK_NODE_SUBSTITUTE = "http://redpencil.data.gift/id/concept/blank-node/";
 
-  String HEADER_MU_SESSION_ID = "mu-session-id";
-  String HEADER_MU_CALL_ID = "mu-call-id";
   String HEADER_MU_AUTH_SUDO = "mu-auth-sudo";
 
 
   String LOGICAL_FILE_PREFIX = "http://data.lblod.info/id/files";
   String FILTER_GRAPH_PREFIX = "http://mu.semte.ch/graphs/harvesting/tasks/filter";
-  String REPORT_GRAPH_PREFIX = "http://mu.semte.ch/graphs/harvesting/tasks/validation-report/";
-  String DATA_CONTAINER_PREFIX = "http://redpencil.data.gift/id/dataContainers";
   String ERROR_URI_PREFIX = "http://redpencil.data.gift/id/jobs/error/";
 }

@@ -29,6 +29,7 @@ import java.util.UUID;
 
 
 public interface ModelUtils {
+  String WELL_KNOWN_PREFIX = "http://example.com/.well-known";
 
   static Model toModel(String value, String lang) {
     if (StringUtils.isEmpty(value)) throw new RuntimeException("model cannot be empty");
@@ -133,8 +134,8 @@ public interface ModelUtils {
 
   static String blankNodeToIriString(Node node, String prefix) {
     if (node.isBlank()) {
-      String x = node.getBlankNodeLabel();
-      return prefix + x;
+      String label = node.getBlankNodeLabel();
+      return "%s/%s/%s".formatted(WELL_KNOWN_PREFIX,prefix,label);
     }
     if (node.isURI())
       return node.getURI();

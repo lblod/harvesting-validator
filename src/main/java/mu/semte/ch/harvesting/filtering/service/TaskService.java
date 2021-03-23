@@ -1,4 +1,4 @@
-package mu.semte.ch.harvesting.filtering.lib.service;
+package mu.semte.ch.harvesting.filtering.service;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
-import static mu.semte.ch.harvesting.filtering.lib.Constants.ERROR_URI_PREFIX;
-import static mu.semte.ch.harvesting.filtering.lib.Constants.LOGICAL_FILE_PREFIX;
+import static mu.semte.ch.harvesting.filtering.Constants.ERROR_URI_PREFIX;
+import static mu.semte.ch.harvesting.filtering.Constants.LOGICAL_FILE_PREFIX;
 import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.*;
 
 @Service

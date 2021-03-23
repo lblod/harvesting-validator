@@ -1,4 +1,4 @@
-package mu.semte.ch.harvesting.filtering.lib.service;
+package mu.semte.ch.harvesting.filtering.service;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
