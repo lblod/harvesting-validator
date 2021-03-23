@@ -1,23 +1,22 @@
-package mu.semte.ch.harvesting.filtering.lib.utils;
+package mu.semte.ch.harvesting.filtering.lib.service;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.harvesting.filtering.lib.dto.DataContainer;
 import mu.semte.ch.harvesting.filtering.lib.dto.Task;
+import mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils;
+import mu.semte.ch.harvesting.filtering.lib.utils.SparqlClient;
+import mu.semte.ch.harvesting.filtering.lib.utils.SparqlQueryStore;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -26,19 +25,23 @@ import java.util.stream.Collectors;
 import static java.util.Optional.ofNullable;
 import static mu.semte.ch.harvesting.filtering.lib.Constants.ERROR_URI_PREFIX;
 import static mu.semte.ch.harvesting.filtering.lib.Constants.LOGICAL_FILE_PREFIX;
-import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.formattedDate;
-import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.uuid;
+import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.*;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Service
 @Slf4j
-public class TaskHelper {
+public class TaskService {
 
+  @Value("${share-folder.path}")
   private String shareFolderPath;
-  private SparqlQueryStore queryStore;
-  private SparqlClient sparqlClient;
+
+  private final SparqlQueryStore queryStore;
+  private final SparqlClient sparqlClient;
+
+  public TaskService(SparqlQueryStore queryStore, SparqlClient sparqlClient) {
+    this.queryStore = queryStore;
+    this.sparqlClient = sparqlClient;
+  }
+
 
   public boolean isTask(String subject) {
     String queryStr = queryStore.getQuery("isTask").formatted(subject);
@@ -77,6 +80,8 @@ public class TaskHelper {
   }
 
   public void updateTaskStatus(Task task, String status) {
+    log.debug("set task status to {}...", status);
+
     String queryUpdate = queryStore.getQuery("updateTaskStatus")
                                    .formatted(status, formattedDate(LocalDateTime.now()), task.getTask());
     sparqlClient.executeUpdateQuery(queryUpdate);
@@ -105,15 +110,17 @@ public class TaskHelper {
   public String writeTtlFile(String graph,
                              Model content,
                              String logicalFileName) {
+    var rdfLang = filenameToLang(logicalFileName);
+    var fileExtension = getExtension(rdfLang);
+    var contentType = getContentType(rdfLang);
     var phyId = uuid();
-    var phyFilename = "%s.nt".formatted(phyId);
+    var phyFilename = "%s.%s".formatted(phyId, fileExtension);
     var path = "%s/%s".formatted(shareFolderPath, phyFilename);
     var physicalFile = "share://%s".formatted(phyFilename);
     var loId = uuid();
     var logicalFile = "%s/%s".formatted(LOGICAL_FILE_PREFIX, loId);
     var now = formattedDate(LocalDateTime.now());
-    var file = new File(path);
-    content.write(new FileWriter(file), "NTRIPLE");
+    var file = ModelUtils.toFile(content, rdfLang, path);
     var fileSize = file.length();
     var queryParameters = ImmutableMap.<String, Object>builder()
                                       .put("graph", graph)
@@ -124,9 +131,9 @@ public class TaskHelper {
                                       .put("now", now)
                                       .put("fileSize", fileSize)
                                       .put("loId", loId)
-                                      .put("logicalFileName", logicalFileName + ".nt")
+                                      .put("logicalFileName", logicalFileName)
                                       .put("fileExtension", "nt")
-                                      .put("contentType", "application/n-triples").build();
+                                      .put("contentType", contentType).build();
 
     var queryStr = queryStore.getQueryWithParameters("writeTtlFile",queryParameters);
     sparqlClient.executeUpdateQuery(queryStr);
@@ -146,7 +153,6 @@ public class TaskHelper {
     var queryStr = queryStore.getQueryWithParameters("appendTaskResultFile",queryParameters);
 
     sparqlClient.executeUpdateQuery(queryStr);
-
   }
 
   public void appendTaskResultGraph(Task task,

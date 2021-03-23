@@ -24,7 +24,7 @@ services:
     restart: always
     ports:
       - 8891:8890
-  db:
+  database:
     image: semtech/mu-authorization:0.6.0-beta.7
     environment:
       MU_SPARQL_ENDPOINT: "http://triplestore:8890/sparql"
@@ -48,13 +48,12 @@ services:
       - ./config:/config
       - ./data/filtering:/share
     environment:
-      SERVER_PORT: "80"
-      SHARE_FOLDER_DIRECTORY: "/share"
-      DEFAULT_BATCH_SIZE: 20
-      DEFAULT_APPLICATION_PROFILE_PATH: "file:/config/application-profile.ttl"
-      LOGGING_LEVEL: "DEBUG"
-      SPARQL_ENDPOINT: "http://db:8890/sparql"
-      MAX_REQUEST_SIZE: "512MB"
-      MAX_FILE_SIZE: "512MB"
-      JAVA_OPTS: "-Xms512m -Xmx512m"
+      SERVER_PORT: "80" # optionals
+      SHARE_FOLDER_DIRECTORY: "/share" # optionals
+      BATCH_SIZE: 20 # optionals
+      APPLICATION_PROFILE_PATH: "/config/application-profile.ttl" # optionals
+      LOGGING_LEVEL: "DEBUG" # optionals
+      SPARQL_ENDPOINT: "http://database:8890/sparql" # optionals
+      MAX_REQUEST_SIZE: "512MB" # optionals
+      MAX_FILE_SIZE: "512MB" # optionals
     restart: always

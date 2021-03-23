@@ -1,5 +1,6 @@
 package mu.semte.ch.harvesting.filtering.lib.utils;
 
+import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.graph.Node;
@@ -13,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -26,9 +29,6 @@ import java.util.UUID;
 
 
 public interface ModelUtils {
-
-  Logger LOG = LoggerFactory.getLogger(ModelUtils.class);
-  String CONTENT_TYPE_TURTLE = "text/turtle";
 
   static Model toModel(String value, String lang) {
     if (StringUtils.isEmpty(value)) throw new RuntimeException("model cannot be empty");
@@ -79,11 +79,17 @@ public interface ModelUtils {
   }
 
   static String getContentType(String lang) {
-    return getRdfLanguage(lang).getContentType().getContentTypeStr();
+    return getContentType(getRdfLanguage(lang));
+  }
+  static String getContentType(Lang lang) {
+    return lang.getContentType().getContentTypeStr();
   }
 
   static String getExtension(String lang) {
-    return getRdfLanguage(lang).getFileExtensions().stream().findFirst().orElse("txt");
+    return getExtension(getRdfLanguage(lang));
+  }
+  static String getExtension(Lang lang) {
+    return lang.getFileExtensions().stream().findFirst().orElse("txt");
   }
 
   static Lang getRdfLanguage(String lang) {
@@ -135,4 +141,10 @@ public interface ModelUtils {
     throw new RiotException("Not a blank node or URI");
   }
 
+  @SneakyThrows
+  static File toFile(Model content, Lang rdfLang, String path) {
+    var file = new File(path);
+    content.write(new FileWriter(file), rdfLang.getName());
+    return file;
+  }
 }

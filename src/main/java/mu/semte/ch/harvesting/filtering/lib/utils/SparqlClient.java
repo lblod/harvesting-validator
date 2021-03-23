@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class SparqlClient {
   private String url;
-  private Map<String, String> muHeaders;
+  private Map<String, String> httpHeaders;
 
   public void insertModel(String graphUri, Model model) {
     var triples = ModelUtils.toString(model, RDFLanguages.NTRIPLES);
@@ -56,6 +56,7 @@ public class SparqlClient {
       return resultHandler.apply(queryExecution.execSelect());
     }
   }
+
   public Model executeSelectQuery(String query) {
     return executeSelectQuery(query, resultSet -> {
       Model model = ModelFactory.createDefaultModel();
@@ -83,7 +84,7 @@ public class SparqlClient {
 
   private HttpClient buildHttpClient() {
     return HttpClients.custom()
-                      .setDefaultHeaders(muHeaders.entrySet()
+                      .setDefaultHeaders(httpHeaders.entrySet()
                                                   .stream()
                                                   .map(h -> new BasicHeader(h.getKey(), h.getValue()))
                                                   .collect(Collectors.toList()))

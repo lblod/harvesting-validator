@@ -1,8 +1,12 @@
 package mu.semte.ch.harvesting.filtering.config;
 
 import lombok.extern.slf4j.Slf4j;
+import mu.semte.ch.harvesting.filtering.lib.utils.SparqlClient;
 import mu.semte.ch.harvesting.filtering.lib.utils.SparqlQueryStore;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.shacl.Shapes;
@@ -18,6 +22,7 @@ import java.util.stream.Collectors;
 
 import static com.github.jsonldjava.shaded.com.google.common.collect.Maps.immutableEntry;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static mu.semte.ch.harvesting.filtering.lib.Constants.HEADER_MU_AUTH_SUDO;
 import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.filenameToLang;
 import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.toModel;
 import static org.apache.commons.io.FilenameUtils.removeExtension;
@@ -31,6 +36,9 @@ public class ApplicationConfig {
 
   @Value("classpath:queries/*.sparql")
   private Resource[] queries;
+
+  @Value("${sparql.endpoint}")
+  private String sparqlUrl;
 
   @Bean
   public Shapes defaultApplicationProfile() throws IOException {
@@ -55,4 +63,14 @@ public class ApplicationConfig {
                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     return queriesMap::get;
   }
+
+  @Bean
+  public SparqlClient defaultSudoSparqlClient(){
+    return SparqlClient.builder()
+                .url(sparqlUrl)
+                .httpHeaders(Map.of(HEADER_MU_AUTH_SUDO, "true"))
+                .build();
+  }
+
+
 }

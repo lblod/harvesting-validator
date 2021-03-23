@@ -1,16 +1,16 @@
 server:
-  port: ${SERVER_PORT:8089}
+  port: ${SERVER_PORT:80}
 
 application-profile:
-  default: ${DEFAULT_APPLICATION_PROFILE_PATH:classpath:default.shaclc}
+  default: file:${APPLICATION_PROFILE_PATH:/config/application-profile.ttl}
 
 share-folder:
-  path: ${SHARE_FOLDER_DIRECTORY:${java.io.tmpdir}}
+  path: ${SHARE_FOLDER_DIRECTORY:/share}
 
 sparql:
-  endpoint: ${SPARQL_ENDPOINT:http://localhost:8890}
-  defaultGraphUri: ${APPLICATION_DEFAULT_GRAPH:http://mu.semte.ch/application}
-  defaultBatchSize: ${DEFAULT_BATCH_SIZE:100}
+  endpoint: ${SPARQL_ENDPOINT:http://database:8890/sparql}
+  defaultGraphUri: ${TARGET_GRAPH:http://mu.semte.ch/application}
+  defaultBatchSize: ${BATCH_SIZE:100}
 
 spring:
   servlet:
@@ -19,4 +19,4 @@ spring:
       max-file-size: ${MAX_FILE_SIZE:512MB}
 logging:
   level:
-    root: ${LOGGING_LEVEL:TRACE}
+    root: ${LOGGING_LEVEL:INFO}

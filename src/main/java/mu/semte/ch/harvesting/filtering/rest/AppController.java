@@ -32,10 +32,6 @@ public class AppController {
 
   @PostMapping("/delta")
   public ResponseEntity<Void> delta(@RequestBody List<Delta> deltas, HttpServletRequest request) {
-    Map<String, String> muHeaders = new HashMap<>();
-    ofNullable(request.getHeader(HEADER_MU_CALL_ID)).ifPresent(h -> muHeaders.put(HEADER_MU_CALL_ID, h));
-    ofNullable(request.getHeader(HEADER_MU_SESSION_ID)).ifPresent(h -> muHeaders.put(HEADER_MU_SESSION_ID, h));
-    muHeaders.put(HEADER_MU_AUTH_SUDO, "true");
     var entries = deltas.stream().findFirst().map(delta -> delta.getInsertsFor(SUBJECT_STATUS, STATUS_SCHEDULED))
     .orElseGet(List::of);
 
@@ -45,9 +41,7 @@ public class AppController {
     }
 
     // NOTE: we don't wait as we do not want to keep hold off the connection.
-    entries.forEach(e ->
-                            filteringService.runFilterPipeline(e, muHeaders)
-    );
+    entries.forEach(filteringService::runFilterPipeline);
 
     return ResponseEntity.ok().build();
   }
