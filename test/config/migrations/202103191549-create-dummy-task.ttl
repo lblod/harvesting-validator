@@ -23,4 +23,4 @@
         adms:status <http://redpencil.data.gift/id/concept/JobStatus/scheduled>;
         task:index "4"^^xsd:integer;
         task:inputContainer <http://redpencil.data.gift/id/dataContainers/2429be50-7dcc-4e3c-33d9-c190011>;
-        task:operation <http://lblod.data.gift/id/jobs/concept/TaskOperation/filtering>.
+        task:operation <http://lblod.data.gift/id/jobs/concept/TaskOperation/validating>.
