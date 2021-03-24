@@ -38,7 +38,7 @@
   </properties>
   <scm>
     <connection>
-      git@github.com:lblod/harvesting-validator.git
+      scm:git:git@github.com:lblod/harvesting-validator.git
     </connection>
     <tag>HEAD</tag>
   </scm>
