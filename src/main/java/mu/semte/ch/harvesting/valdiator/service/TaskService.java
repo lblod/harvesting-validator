@@ -14,6 +14,7 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.riot.system.RiotLib;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
