@@ -6,7 +6,7 @@ steps:
 - name: build-dry-run
   image: plugins/docker
   settings:
-    repo: lblod/app-poc-harvesting-filtering-service
+    repo: lblod/harvesting-validator
     dry_run: true
     purge: true
 trigger:
@@ -20,7 +20,7 @@ steps:
 - name: push-latest-build
   image: plugins/docker
   settings:
-    repo: lblod/app-poc-harvesting-filtering-service
+    repo: lblod/harvesting-validator
     username:
       from_secret: docker_username
     password:
@@ -37,13 +37,13 @@ steps:
 - name: build-dry-run
   image: plugins/docker
   settings:
-    repo: lblod/app-poc-harvesting-filtering-service
+    repo: lblod/harvesting-validator
     dry_run: true
     purge: true
 - name: push-tagged-build
   image: plugins/docker
   settings:
-    repo: lblod/app-poc-harvesting-filtering-service
+    repo: lblod/harvesting-validator
     tags: ${DRONE_TAG##v}
     username:
       from_secret: docker_username
