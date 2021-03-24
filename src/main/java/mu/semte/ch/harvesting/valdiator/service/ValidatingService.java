@@ -46,7 +46,7 @@ public class ValidatingService {
     log.debug("generate validation reports...");
     var report = shaclService.validate(importedTriples.getGraph());
     log.debug("triples conforms: {}", report.conforms());
-    var reportModel = ModelUtils.replaceAnonNodes(report.getModel(), "report");
+    var reportModel = ModelUtils.replaceAnonNodes(report.getModel());
     var dataContainer = fileContainer.toBuilder()
                                      .graphUri(taskService.writeTtlFile(task.getGraph(), reportModel, "validation-report.ttl"))
                                      .build();

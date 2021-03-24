@@ -24,7 +24,7 @@ import java.util.UUID;
 
 
 public interface ModelUtils {
-  String WELL_KNOWN_PREFIX = "http://example.com/.well-known";
+  String WELL_KNOWN_PREFIX = "http://data.lblod.info/.well-known/genid";
 
   static Model toModel(String value, String lang) {
     if (StringUtils.isEmpty(value)) throw new RuntimeException("model cannot be empty");
@@ -106,7 +106,7 @@ public interface ModelUtils {
     return bos.toByteArray();
   }
 
-  static Model replaceAnonNodes(Model model, String prefix) {
+  static Model replaceAnonNodes(Model model) {
     Model m = ModelFactory.createDefaultModel();
     model.listStatements().toList()
          .stream()
@@ -115,13 +115,13 @@ public interface ModelUtils {
            var predicate = statement.getPredicate();
            var object = statement.getObject();
            if (subject.isAnon()) {
-             subject = ResourceFactory.createResource(blankNodeToIriString(subject.asNode(), prefix));
+             subject = ResourceFactory.createResource(blankNodeToIriString(subject.asNode()));
            }
            if (predicate.isAnon()) {
-             predicate = ResourceFactory.createProperty(blankNodeToIriString(predicate.asNode(), prefix));
+             predicate = ResourceFactory.createProperty(blankNodeToIriString(predicate.asNode()));
            }
            if (object.isResource() && object.isAnon()) {
-             object = ResourceFactory.createProperty(blankNodeToIriString(object.asNode(), prefix));
+             object = ResourceFactory.createProperty(blankNodeToIriString(object.asNode()));
            }
            return ResourceFactory.createStatement(subject, predicate, object);
          })
@@ -129,10 +129,10 @@ public interface ModelUtils {
     return m;
   }
 
-  static String blankNodeToIriString(Node node, String prefix) {
+  static String blankNodeToIriString(Node node) {
     if (node.isBlank()) {
       String label = node.getBlankNodeLabel();
-      return "%s/%s/%s".formatted(WELL_KNOWN_PREFIX, prefix, label);
+      return "%s/%s".formatted(WELL_KNOWN_PREFIX,label);
     }
     if (node.isURI())
       return node.getURI();
