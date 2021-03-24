@@ -9,7 +9,7 @@
   </parent>
   <groupId>mu.semte.ch</groupId>
   <artifactId>harvesting-validator</artifactId>
-  <version>0.0.1-alpha</version>
+  <version>0.0.2-SNAPSHOT</version>
   <name>harvesting-validator</name>
   <description>Harvesting Validator</description>
   <licenses>
@@ -39,7 +39,7 @@
     <connection>
       scm:git:git@github.com:lblod/harvesting-validator.git
     </connection>
-    <tag>0.0.1-alpha</tag>
+    <tag>HEAD</tag>
   </scm>
   <dependencies>
     <dependency>
