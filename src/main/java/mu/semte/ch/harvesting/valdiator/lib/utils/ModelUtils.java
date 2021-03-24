@@ -24,7 +24,7 @@ import java.util.UUID;
 
 
 public interface ModelUtils {
-  String WELL_KNOWN_PREFIX = "http://data.lblod.info/.well-known/genid";
+  String DEFAULT_WELL_KNOWN_PREFIX = "http://data.lblod.info/.well-known/genid";
 
   static Model toModel(String value, String lang) {
     if (StringUtils.isEmpty(value)) throw new RuntimeException("model cannot be empty");
@@ -106,7 +106,7 @@ public interface ModelUtils {
     return bos.toByteArray();
   }
 
-  static Model replaceAnonNodes(Model model) {
+  static Model replaceAnonNodes(Model model, String nodePrefix) {
     Model m = ModelFactory.createDefaultModel();
     model.listStatements().toList()
          .stream()
@@ -115,13 +115,13 @@ public interface ModelUtils {
            var predicate = statement.getPredicate();
            var object = statement.getObject();
            if (subject.isAnon()) {
-             subject = ResourceFactory.createResource(blankNodeToIriString(subject.asNode()));
+             subject = ResourceFactory.createResource(blankNodeToIriString(subject.asNode(),nodePrefix));
            }
            if (predicate.isAnon()) {
-             predicate = ResourceFactory.createProperty(blankNodeToIriString(predicate.asNode()));
+             predicate = ResourceFactory.createProperty(blankNodeToIriString(predicate.asNode(),nodePrefix));
            }
            if (object.isResource() && object.isAnon()) {
-             object = ResourceFactory.createProperty(blankNodeToIriString(object.asNode()));
+             object = ResourceFactory.createProperty(blankNodeToIriString(object.asNode(),nodePrefix));
            }
            return ResourceFactory.createStatement(subject, predicate, object);
          })
@@ -129,10 +129,14 @@ public interface ModelUtils {
     return m;
   }
 
-  static String blankNodeToIriString(Node node) {
+  static Model replaceAnonNodes(Model model) {
+   return replaceAnonNodes(model, DEFAULT_WELL_KNOWN_PREFIX);
+  }
+
+  static String blankNodeToIriString(Node node, String nodePrefix) {
     if (node.isBlank()) {
       String label = node.getBlankNodeLabel();
-      return "%s/%s".formatted(WELL_KNOWN_PREFIX,label);
+      return "%s/%s".formatted(nodePrefix,label);
     }
     if (node.isURI())
       return node.getURI();
