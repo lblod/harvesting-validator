@@ -97,18 +97,15 @@ public class TaskService {
                             Model model) {
     log.debug("running import triples with batch size {}, model size: {}, graph: <{}>", defaultBatchSize, model.size(), graph);
     List<Triple> triples = model.getGraph().find().toList(); //duplicate so we can splice
-    var batches = Lists.partition(triples, defaultBatchSize)
+    Lists.partition(triples, defaultBatchSize)
                        .stream()
+                       .parallel()
                        .map(batch -> {
                          Model batchModel = ModelFactory.createDefaultModel();
                          Graph batchGraph = batchModel.getGraph();
                          batch.forEach(batchGraph::add);
                          return batchModel;
-                       })
-                       .collect(Collectors.toList());
-    for (var batchModel : batches) {
-      sparqlClient.insertModel(graph, batchModel);
-    }
+                       }).forEach(batchModel -> sparqlClient.insertModel(graph, batchModel));
   }
 
   @SneakyThrows
