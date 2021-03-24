@@ -15,7 +15,6 @@ FROM amazoncorretto:15-alpine
 
 WORKDIR /app
 
-COPY --from=builder /app/target/harvesting-filtering.jar ./app.jar
+COPY --from=builder /app/target/harvesting-validator.jar ./app.jar
 
-# set the startup command to run your binary
 ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app/app.jar"]

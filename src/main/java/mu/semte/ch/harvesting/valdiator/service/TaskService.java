@@ -1,14 +1,14 @@
-package mu.semte.ch.harvesting.filtering.service;
+package mu.semte.ch.harvesting.valdiator.service;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import mu.semte.ch.harvesting.filtering.lib.dto.DataContainer;
-import mu.semte.ch.harvesting.filtering.lib.dto.Task;
-import mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils;
-import mu.semte.ch.harvesting.filtering.lib.utils.SparqlClient;
-import mu.semte.ch.harvesting.filtering.lib.utils.SparqlQueryStore;
+import mu.semte.ch.harvesting.valdiator.lib.dto.DataContainer;
+import mu.semte.ch.harvesting.valdiator.lib.dto.Task;
+import mu.semte.ch.harvesting.valdiator.lib.utils.ModelUtils;
+import mu.semte.ch.harvesting.valdiator.lib.utils.SparqlClient;
+import mu.semte.ch.harvesting.valdiator.lib.utils.SparqlQueryStore;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
@@ -24,13 +24,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
-import static mu.semte.ch.harvesting.filtering.Constants.ERROR_URI_PREFIX;
-import static mu.semte.ch.harvesting.filtering.Constants.LOGICAL_FILE_PREFIX;
-import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.filenameToLang;
-import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.formattedDate;
-import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.getContentType;
-import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.getExtension;
-import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.uuid;
+import static mu.semte.ch.harvesting.valdiator.Constants.ERROR_URI_PREFIX;
+import static mu.semte.ch.harvesting.valdiator.Constants.LOGICAL_FILE_PREFIX;
+import static mu.semte.ch.harvesting.valdiator.lib.utils.ModelUtils.filenameToLang;
+import static mu.semte.ch.harvesting.valdiator.lib.utils.ModelUtils.formattedDate;
+import static mu.semte.ch.harvesting.valdiator.lib.utils.ModelUtils.getContentType;
+import static mu.semte.ch.harvesting.valdiator.lib.utils.ModelUtils.getExtension;
+import static mu.semte.ch.harvesting.valdiator.lib.utils.ModelUtils.uuid;
 
 @Service
 @Slf4j

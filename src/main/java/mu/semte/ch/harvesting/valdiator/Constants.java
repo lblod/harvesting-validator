@@ -1,4 +1,4 @@
-package mu.semte.ch.harvesting.filtering;
+package mu.semte.ch.harvesting.valdiator;
 
 public interface Constants {
   String TASK_HARVESTING_VALIDATING = "http://lblod.data.gift/id/jobs/concept/TaskOperation/validating";
@@ -17,6 +17,4 @@ public interface Constants {
   String FILTER_GRAPH_PREFIX = "http://mu.semte.ch/graphs/harvesting/tasks/filtering";
   String VALIDATING_GRAPH_PREFIX = "http://mu.semte.ch/graphs/harvesting/tasks/validating";
   String ERROR_URI_PREFIX = "http://redpencil.data.gift/id/jobs/error/";
-
-  String PREF_LABEL_VALID_TRIPLES = "valid triples";
 }

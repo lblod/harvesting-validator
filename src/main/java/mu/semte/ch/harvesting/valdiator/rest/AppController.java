@@ -1,8 +1,8 @@
-package mu.semte.ch.harvesting.filtering.rest;
+package mu.semte.ch.harvesting.valdiator.rest;
 
 import lombok.extern.slf4j.Slf4j;
-import mu.semte.ch.harvesting.filtering.lib.dto.Delta;
-import mu.semte.ch.harvesting.filtering.service.PipelineService;
+import mu.semte.ch.harvesting.valdiator.lib.dto.Delta;
+import mu.semte.ch.harvesting.valdiator.service.PipelineService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
-import static mu.semte.ch.harvesting.filtering.Constants.STATUS_SCHEDULED;
-import static mu.semte.ch.harvesting.filtering.Constants.SUBJECT_STATUS;
+import static mu.semte.ch.harvesting.valdiator.Constants.STATUS_SCHEDULED;
+import static mu.semte.ch.harvesting.valdiator.Constants.SUBJECT_STATUS;
 
 @RestController
 @Slf4j

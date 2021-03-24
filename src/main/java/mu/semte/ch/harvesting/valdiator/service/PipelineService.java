@@ -1,7 +1,7 @@
-package mu.semte.ch.harvesting.filtering.service;
+package mu.semte.ch.harvesting.valdiator.service;
 
 import lombok.extern.slf4j.Slf4j;
-import mu.semte.ch.harvesting.filtering.lib.dto.Task;
+import mu.semte.ch.harvesting.valdiator.lib.dto.Task;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -11,11 +11,11 @@ import java.util.function.Consumer;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
-import static mu.semte.ch.harvesting.filtering.Constants.STATUS_BUSY;
-import static mu.semte.ch.harvesting.filtering.Constants.STATUS_FAILED;
-import static mu.semte.ch.harvesting.filtering.Constants.STATUS_SUCCESS;
-import static mu.semte.ch.harvesting.filtering.Constants.TASK_HARVESTING_FILTERING;
-import static mu.semte.ch.harvesting.filtering.Constants.TASK_HARVESTING_VALIDATING;
+import static mu.semte.ch.harvesting.valdiator.Constants.STATUS_BUSY;
+import static mu.semte.ch.harvesting.valdiator.Constants.STATUS_FAILED;
+import static mu.semte.ch.harvesting.valdiator.Constants.STATUS_SUCCESS;
+import static mu.semte.ch.harvesting.valdiator.Constants.TASK_HARVESTING_FILTERING;
+import static mu.semte.ch.harvesting.valdiator.Constants.TASK_HARVESTING_VALIDATING;
 
 @Service
 @Slf4j

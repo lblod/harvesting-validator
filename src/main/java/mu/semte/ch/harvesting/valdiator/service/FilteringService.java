@@ -1,13 +1,13 @@
-package mu.semte.ch.harvesting.filtering.service;
+package mu.semte.ch.harvesting.valdiator.service;
 
 import lombok.extern.slf4j.Slf4j;
-import mu.semte.ch.harvesting.filtering.lib.dto.DataContainer;
-import mu.semte.ch.harvesting.filtering.lib.dto.Task;
+import mu.semte.ch.harvesting.valdiator.lib.dto.DataContainer;
+import mu.semte.ch.harvesting.valdiator.lib.dto.Task;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.shacl.ValidationReport;
 import org.springframework.stereotype.Service;
 
-import static mu.semte.ch.harvesting.filtering.Constants.FILTER_GRAPH_PREFIX;
+import static mu.semte.ch.harvesting.valdiator.Constants.FILTER_GRAPH_PREFIX;
 
 @Service
 @Slf4j

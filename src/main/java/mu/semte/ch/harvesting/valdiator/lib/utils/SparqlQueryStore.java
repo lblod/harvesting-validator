@@ -1,4 +1,4 @@
-package mu.semte.ch.harvesting.filtering.lib.utils;
+package mu.semte.ch.harvesting.valdiator.lib.utils;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;

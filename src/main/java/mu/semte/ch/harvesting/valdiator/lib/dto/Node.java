@@ -1,4 +1,4 @@
-package mu.semte.ch.harvesting.filtering.lib.dto;
+package mu.semte.ch.harvesting.valdiator.lib.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChangeSet {
-  private Delta delta;
+public class Node {
+  private String type;
+  private String value;
+  private String datatype;
 }

@@ -1,7 +1,8 @@
-package mu.semte.ch.harvesting.filtering.service;
+package mu.semte.ch.harvesting.valdiator.service;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import mu.semte.ch.harvesting.valdiator.lib.utils.ModelUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.NodeFactory;
@@ -21,8 +22,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.filenameToLang;
-import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.toModel;
+import static mu.semte.ch.harvesting.valdiator.lib.utils.ModelUtils.filenameToLang;
+import static mu.semte.ch.harvesting.valdiator.lib.utils.ModelUtils.toModel;
 
 
 @Service
@@ -43,8 +44,8 @@ public class ShaclService {
   }
 
   public Graph filter(InputStream dataModel, Lang modelLang, InputStream shapesModel, Lang shapesLang) {
-    Graph dataGraph = toModel(dataModel, modelLang).getGraph();
-    Graph shapesGraph = toModel(shapesModel, shapesLang).getGraph();
+    Graph dataGraph = ModelUtils.toModel(dataModel, modelLang).getGraph();
+    Graph shapesGraph = ModelUtils.toModel(shapesModel, shapesLang).getGraph();
     Shapes shapes = Shapes.parse(shapesGraph);
     ValidationReport report = validate(dataGraph, shapes);
     return filter(dataGraph, shapes, report);
@@ -68,7 +69,7 @@ public class ShaclService {
   }
 
   public Graph filter(InputStream dataModel, Lang modelLang) {
-    Graph dataGraph = toModel(dataModel, modelLang).getGraph();
+    Graph dataGraph = ModelUtils.toModel(dataModel, modelLang).getGraph();
     ValidationReport report = validate(dataGraph);
     return filter(dataGraph, applicationProfile, report);
   }
@@ -100,13 +101,13 @@ public class ShaclService {
 
   @SneakyThrows
   public Graph filter(MultipartFile dataModel) {
-    return filter(dataModel.getInputStream(), filenameToLang(dataModel.getOriginalFilename()));
+    return filter(dataModel.getInputStream(), ModelUtils.filenameToLang(dataModel.getOriginalFilename()));
   }
 
   @SneakyThrows
   public Graph filter(MultipartFile dataModel, MultipartFile shapesFile) {
-    return filter(dataModel.getInputStream(), filenameToLang(dataModel.getOriginalFilename()),
-                  shapesFile.getInputStream(), filenameToLang(shapesFile.getOriginalFilename()));
+    return filter(dataModel.getInputStream(), ModelUtils.filenameToLang(dataModel.getOriginalFilename()),
+                  shapesFile.getInputStream(), ModelUtils.filenameToLang(shapesFile.getOriginalFilename()));
   }
 
 }

@@ -1,11 +1,10 @@
-package mu.semte.ch.harvesting.filtering.lib.dto;
+package mu.semte.ch.harvesting.valdiator.lib.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import static mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils.uuid;
+import mu.semte.ch.harvesting.valdiator.lib.utils.ModelUtils;
 
 @Data
 @Builder(toBuilder = true)
@@ -15,7 +14,7 @@ public class DataContainer {
   public static String DATA_CONTAINER_PREFIX = "http://redpencil.data.gift/id/dataContainers";
 
   @Builder.Default
-  private String id = uuid();
+  private String id = ModelUtils.uuid();
   private String graphUri;
   private String validationGraphUri;
 

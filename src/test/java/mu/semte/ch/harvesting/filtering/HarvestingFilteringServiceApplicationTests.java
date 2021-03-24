@@ -1,6 +1,6 @@
 package mu.semte.ch.harvesting.filtering;
 
-import mu.semte.ch.harvesting.filtering.lib.utils.SparqlQueryStore;
+import mu.semte.ch.harvesting.valdiator.lib.utils.SparqlQueryStore;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.util.StringUtils;

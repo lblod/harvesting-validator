@@ -1,13 +1,12 @@
-package mu.semte.ch.harvesting.filtering.service;
+package mu.semte.ch.harvesting.valdiator.service;
 
 import lombok.extern.slf4j.Slf4j;
-import mu.semte.ch.harvesting.filtering.lib.dto.DataContainer;
-import mu.semte.ch.harvesting.filtering.lib.dto.Task;
-import mu.semte.ch.harvesting.filtering.lib.utils.ModelUtils;
+import mu.semte.ch.harvesting.valdiator.lib.dto.DataContainer;
+import mu.semte.ch.harvesting.valdiator.lib.dto.Task;
+import mu.semte.ch.harvesting.valdiator.lib.utils.ModelUtils;
+import mu.semte.ch.harvesting.valdiator.Constants;
 import org.apache.jena.rdf.model.Model;
 import org.springframework.stereotype.Service;
-
-import static mu.semte.ch.harvesting.filtering.Constants.VALIDATING_GRAPH_PREFIX;
 
 @Service
 @Slf4j
@@ -29,7 +28,7 @@ public class ValidatingService {
     var report = writeValidationReport(task, fileContainer, importedTriples);
 
     // import validation report
-    var reportGraph = "%s/%s".formatted(VALIDATING_GRAPH_PREFIX, task.getId());
+    var reportGraph = "%s/%s".formatted(Constants.VALIDATING_GRAPH_PREFIX, task.getId());
 
     taskService.importTriples(reportGraph, report);
 

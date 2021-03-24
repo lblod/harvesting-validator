@@ -58,6 +58,7 @@ Validate and filter based on a single shacl application profile.
 - `MAX_REQUEST_SIZE` : default set to `512MB`
 - `MAX_FILE_SIZE` : default set to `512MB`
 - `TARGET_GRAPH` : default set to `http://mu.semte.ch/application`
+- `JAVA_OPTS` : not set by default. e.g `-Xms640M -Xmx1280M`
 
 ## Development
 

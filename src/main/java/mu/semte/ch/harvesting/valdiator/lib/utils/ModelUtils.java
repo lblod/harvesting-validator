@@ -1,4 +1,4 @@
-package mu.semte.ch.harvesting.filtering.lib.utils;
+package mu.semte.ch.harvesting.valdiator.lib.utils;
 
 import lombok.SneakyThrows;
 import org.apache.commons.io.IOUtils;

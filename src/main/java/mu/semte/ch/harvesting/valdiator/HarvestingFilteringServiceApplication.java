@@ -1,4 +1,4 @@
-package mu.semte.ch.harvesting.filtering;
+package mu.semte.ch.harvesting.valdiator;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

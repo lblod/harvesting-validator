@@ -1,4 +1,4 @@
-package mu.semte.ch.harvesting.filtering.lib.dto;
+package mu.semte.ch.harvesting.valdiator.lib.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
