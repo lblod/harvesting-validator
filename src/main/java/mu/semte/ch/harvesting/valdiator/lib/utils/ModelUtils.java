@@ -115,13 +115,13 @@ public interface ModelUtils {
            var predicate = statement.getPredicate();
            var object = statement.getObject();
            if (subject.isAnon()) {
-             subject = ResourceFactory.createResource(blankNodeToIriString(subject.asNode(),nodePrefix));
+             subject = ResourceFactory.createResource(blankNodeToIriString(subject.asNode(), nodePrefix));
            }
            if (predicate.isAnon()) {
-             predicate = ResourceFactory.createProperty(blankNodeToIriString(predicate.asNode(),nodePrefix));
+             predicate = ResourceFactory.createProperty(blankNodeToIriString(predicate.asNode(), nodePrefix));
            }
            if (object.isResource() && object.isAnon()) {
-             object = ResourceFactory.createProperty(blankNodeToIriString(object.asNode(),nodePrefix));
+             object = ResourceFactory.createProperty(blankNodeToIriString(object.asNode(), nodePrefix));
            }
            return ResourceFactory.createStatement(subject, predicate, object);
          })
@@ -130,13 +130,13 @@ public interface ModelUtils {
   }
 
   static Model replaceAnonNodes(Model model) {
-   return replaceAnonNodes(model, DEFAULT_WELL_KNOWN_PREFIX);
+    return replaceAnonNodes(model, DEFAULT_WELL_KNOWN_PREFIX);
   }
 
   static String blankNodeToIriString(Node node, String nodePrefix) {
     if (node.isBlank()) {
       String label = node.getBlankNodeLabel();
-      return "%s/%s".formatted(nodePrefix,label);
+      return "%s/%s".formatted(nodePrefix, label);
     }
     if (node.isURI())
       return node.getURI();

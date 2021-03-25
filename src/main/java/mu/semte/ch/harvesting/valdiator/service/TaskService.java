@@ -14,7 +14,6 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.riot.system.RiotLib;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +21,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 import static mu.semte.ch.harvesting.valdiator.Constants.ERROR_URI_PREFIX;
@@ -99,14 +97,14 @@ public class TaskService {
     log.debug("running import triples with batch size {}, model size: {}, graph: <{}>", defaultBatchSize, model.size(), graph);
     List<Triple> triples = model.getGraph().find().toList(); //duplicate so we can splice
     Lists.partition(triples, defaultBatchSize)
-                       .stream()
-                       .parallel()
-                       .map(batch -> {
-                         Model batchModel = ModelFactory.createDefaultModel();
-                         Graph batchGraph = batchModel.getGraph();
-                         batch.forEach(batchGraph::add);
-                         return batchModel;
-                       }).forEach(batchModel -> sparqlClient.insertModel(graph, batchModel));
+         .stream()
+         .parallel()
+         .map(batch -> {
+           Model batchModel = ModelFactory.createDefaultModel();
+           Graph batchGraph = batchModel.getGraph();
+           batch.forEach(batchGraph::add);
+           return batchModel;
+         }).forEach(batchModel -> sparqlClient.insertModel(graph, batchModel));
   }
 
   @SneakyThrows

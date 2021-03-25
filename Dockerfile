@@ -11,7 +11,7 @@ COPY ./src ./src
 
 RUN mvn package -DskipTests
 
-FROM amazoncorretto:15-alpine
+FROM amazoncorretto:15
 
 WORKDIR /app
 

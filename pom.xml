@@ -34,6 +34,7 @@
     <jena.version>3.17.0</jena.version>
     <guava.version>29.0-jre</guava.version>
     <commons-text.version>1.9</commons-text.version>
+    <poi.version>5.0.0</poi.version>
   </properties>
   <scm>
     <connection>
@@ -42,6 +43,16 @@
     <tag>HEAD</tag>
   </scm>
   <dependencies>
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi</artifactId>
+      <version>${poi.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.poi</groupId>
+      <artifactId>poi-ooxml</artifactId>
+      <version>${poi.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-freemarker</artifactId>

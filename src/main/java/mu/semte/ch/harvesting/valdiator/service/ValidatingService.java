@@ -1,10 +1,10 @@
 package mu.semte.ch.harvesting.valdiator.service;
 
 import lombok.extern.slf4j.Slf4j;
+import mu.semte.ch.harvesting.valdiator.Constants;
 import mu.semte.ch.harvesting.valdiator.lib.dto.DataContainer;
 import mu.semte.ch.harvesting.valdiator.lib.dto.Task;
 import mu.semte.ch.harvesting.valdiator.lib.utils.ModelUtils;
-import mu.semte.ch.harvesting.valdiator.Constants;
 import org.apache.jena.rdf.model.Model;
 import org.springframework.stereotype.Service;
 
@@ -13,10 +13,14 @@ import org.springframework.stereotype.Service;
 public class ValidatingService {
   private final ShaclService shaclService;
   private final TaskService taskService;
+  private final XlsReportService xlsReportService;
 
-  public ValidatingService(ShaclService shaclService, TaskService taskService) {
+  public ValidatingService(ShaclService shaclService,
+                           TaskService taskService,
+                           XlsReportService xlsReportService) {
     this.shaclService = shaclService;
     this.taskService = taskService;
+    this.xlsReportService = xlsReportService;
   }
 
   public void runValidatePipeline(Task task) {
@@ -27,9 +31,11 @@ public class ValidatingService {
 
     var report = writeValidationReport(task, fileContainer, importedTriples);
 
+    // write xls report
+    xlsReportService.writeReport(task, report, fileContainer);
+
     // import validation report
     var reportGraph = "%s/%s".formatted(Constants.VALIDATING_GRAPH_PREFIX, task.getId());
-
     taskService.importTriples(reportGraph, report);
 
     // append result graph
@@ -53,4 +59,5 @@ public class ValidatingService {
     taskService.appendTaskResultFile(task, dataContainer);
     return reportModel;
   }
+
 }

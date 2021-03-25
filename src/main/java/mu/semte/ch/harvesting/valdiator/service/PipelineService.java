@@ -57,7 +57,7 @@ public class PipelineService {
         taskService.updateTaskStatus(task, STATUS_SUCCESS);
         log.debug("Done with success for task {}", task.getId());
       }
-      catch (Exception e) {
+      catch (Throwable e) {
         log.error("Error:", e);
         taskService.updateTaskStatus(task, STATUS_FAILED);
         taskService.appendTaskError(task, e.getMessage());
