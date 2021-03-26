@@ -123,7 +123,7 @@ public class XlsReportService {
   @SneakyThrows
   private String writeFile(String graph, Workbook workbook) {
     var fileExtension = "xlsx";
-    var logicalFileName = "report-statistics";
+    var logicalFileName = "report-statistics." + fileExtension;
     var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     var phyId = uuid();
     var phyFilename = "%s.%s".formatted(phyId, fileExtension);
