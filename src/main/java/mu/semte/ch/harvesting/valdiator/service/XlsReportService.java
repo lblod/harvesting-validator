@@ -13,6 +13,9 @@ import org.apache.jena.shacl.engine.ShaclPaths;
 import org.apache.jena.shacl.lib.ShLib;
 import org.apache.jena.shacl.validation.ReportEntry;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -56,6 +59,12 @@ public class XlsReportService {
 
   public void writeReport(Task task, Model report, DataContainer fileContainer) {
     ValidationReport validationReport = shaclService.fromModel(report);
+
+    if (validationReport.conforms()){
+      log.debug("report conforms, skipping writing xlsx report...");
+      return;
+    }
+
     Workbook workbook = new XSSFWorkbook();
 
     var groupedByPath = validationReport.getEntries()
@@ -97,6 +106,14 @@ public class XlsReportService {
       }
 
     });
+    Row row = sheet.createRow(counter.getAndAdd(1));
+    CellStyle cellStyle = workbook.createCellStyle();
+    cellStyle.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
+    cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+    var totalCell = row.createCell(0);
+    totalCell.setCellValue("Total");
+    totalCell.setCellStyle(cellStyle);
+    row.createCell(1).setCellValue(validationReport.getEntries().size());
     autoSizeColumns(workbook);
     var dataContainer = fileContainer.toBuilder()
                                      .graphUri(writeFile(task.getGraph(), workbook))
