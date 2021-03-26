@@ -37,3 +37,5 @@ mvnw*
 test/data/**
 
 Scratch.java
+
+.DS_STORE
