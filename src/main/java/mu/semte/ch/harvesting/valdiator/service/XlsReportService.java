@@ -108,12 +108,14 @@ public class XlsReportService {
     });
     Row row = sheet.createRow(counter.getAndAdd(1));
     CellStyle cellStyle = workbook.createCellStyle();
-    cellStyle.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
+    cellStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
     cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
     var totalCell = row.createCell(0);
     totalCell.setCellValue("Total");
     totalCell.setCellStyle(cellStyle);
-    row.createCell(1).setCellValue(validationReport.getEntries().size());
+    var totalCellValue = row.createCell(1);
+    totalCellValue.setCellValue(validationReport.getEntries().size());
+    totalCellValue.setCellStyle(cellStyle);
     autoSizeColumns(workbook);
     var dataContainer = fileContainer.toBuilder()
                                      .graphUri(writeFile(task.getGraph(), workbook))
