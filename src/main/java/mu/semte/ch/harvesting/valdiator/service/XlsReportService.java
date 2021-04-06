@@ -7,11 +7,13 @@ import mu.semte.ch.harvesting.valdiator.lib.dto.DataContainer;
 import mu.semte.ch.harvesting.valdiator.lib.dto.Task;
 import mu.semte.ch.harvesting.valdiator.lib.utils.SparqlClient;
 import mu.semte.ch.harvesting.valdiator.lib.utils.SparqlQueryStore;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.shacl.ValidationReport;
 import org.apache.jena.shacl.engine.ShaclPaths;
 import org.apache.jena.shacl.lib.ShLib;
 import org.apache.jena.shacl.validation.ReportEntry;
+import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -60,7 +62,7 @@ public class XlsReportService {
   public void writeReport(Task task, Model report, DataContainer fileContainer) {
     ValidationReport validationReport = shaclService.fromModel(report);
 
-    if (validationReport.conforms()){
+    if (validationReport.conforms()) {
       log.debug("report conforms, skipping writing xlsx report...");
       return;
     }
@@ -96,12 +98,22 @@ public class XlsReportService {
         Row detailRow = detailSheet.createRow(i + 1);
         ReportEntry reportEntry = list.get(i);
 
-        detailRow.createCell(0).setCellValue(ShLib.displayStr(reportEntry.focusNode()));
-        detailRow.createCell(1).setCellValue(ofNullable(reportEntry.value()).map(ShLib::displayStr).orElse(""));
-        detailRow.createCell(2).setCellValue(ofNullable(reportEntry.message()).orElse(""));
+        detailRow.createCell(0).setCellValue(ofNullable(reportEntry.focusNode())
+                                                     .map(ShLib::displayStr)
+                                                     .map(this::abbreviate)
+                                                     .orElse(""));
+        detailRow.createCell(1).setCellValue(ofNullable(reportEntry.value())
+                                                     .map(ShLib::displayStr)
+                                                     .map(this::abbreviate)
+                                                     .orElse(""));
+        detailRow.createCell(2).setCellValue(ofNullable(reportEntry.message())
+                                                     .map(this::abbreviate)
+                                                     .orElse(""));
         detailRow.createCell(3).setCellValue(ofNullable(reportEntry.resultPath())
                                                      .map(ShaclPaths::pathNode)
-                                                     .map(ShLib::displayStr).orElse(""));
+                                                     .map(ShLib::displayStr)
+                                                     .map(this::abbreviate)
+                                                     .orElse(""));
 
       }
 
@@ -121,6 +133,10 @@ public class XlsReportService {
                                      .graphUri(writeFile(task.getGraph(), workbook))
                                      .build();
     taskService.appendTaskResultFile(task, dataContainer);
+  }
+
+  private String abbreviate(String val) {
+    return StringUtils.abbreviate(val, 1024);
   }
 
   private void autoSizeColumns(Workbook workbook) {
