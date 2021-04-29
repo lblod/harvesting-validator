@@ -2,7 +2,7 @@ package mu.semte.ch.harvesting.valdiator.service;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import mu.semte.ch.harvesting.valdiator.lib.utils.ModelUtils;
+import mu.semte.ch.lib.utils.ModelUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.NodeFactory;

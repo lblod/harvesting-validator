@@ -1,8 +1,8 @@
 package mu.semte.ch.harvesting.valdiator.service;
 
 import lombok.extern.slf4j.Slf4j;
-import mu.semte.ch.harvesting.valdiator.lib.dto.DataContainer;
-import mu.semte.ch.harvesting.valdiator.lib.dto.Task;
+import mu.semte.ch.lib.dto.DataContainer;
+import mu.semte.ch.lib.dto.Task;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.shacl.ValidationReport;
 import org.springframework.stereotype.Service;

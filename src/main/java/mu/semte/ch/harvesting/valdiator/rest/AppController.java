@@ -1,7 +1,7 @@
 package mu.semte.ch.harvesting.valdiator.rest;
 
 import lombok.extern.slf4j.Slf4j;
-import mu.semte.ch.harvesting.valdiator.lib.dto.Delta;
+import mu.semte.ch.lib.dto.Delta;
 import mu.semte.ch.harvesting.valdiator.service.PipelineService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

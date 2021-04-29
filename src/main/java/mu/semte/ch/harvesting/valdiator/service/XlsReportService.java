@@ -3,17 +3,16 @@ package mu.semte.ch.harvesting.valdiator.service;
 import com.google.common.collect.ImmutableMap;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import mu.semte.ch.harvesting.valdiator.lib.dto.DataContainer;
-import mu.semte.ch.harvesting.valdiator.lib.dto.Task;
-import mu.semte.ch.harvesting.valdiator.lib.utils.SparqlClient;
-import mu.semte.ch.harvesting.valdiator.lib.utils.SparqlQueryStore;
+import mu.semte.ch.lib.dto.DataContainer;
+import mu.semte.ch.lib.dto.Task;
+import mu.semte.ch.lib.utils.SparqlClient;
+import mu.semte.ch.lib.utils.SparqlQueryStore;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.shacl.ValidationReport;
 import org.apache.jena.shacl.engine.ShaclPaths;
 import org.apache.jena.shacl.lib.ShLib;
 import org.apache.jena.shacl.validation.ReportEntry;
-import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -35,8 +34,8 @@ import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 import static mu.semte.ch.harvesting.valdiator.Constants.LOGICAL_FILE_PREFIX;
-import static mu.semte.ch.harvesting.valdiator.lib.utils.ModelUtils.formattedDate;
-import static mu.semte.ch.harvesting.valdiator.lib.utils.ModelUtils.uuid;
+import static mu.semte.ch.lib.utils.ModelUtils.formattedDate;
+import static mu.semte.ch.lib.utils.ModelUtils.uuid;
 import static org.apache.jena.shacl.engine.ShaclPaths.pathNode;
 
 @Service
