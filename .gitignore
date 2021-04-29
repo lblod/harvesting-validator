@@ -31,7 +31,6 @@ build/
 .vscode/
 
 mvnw*
-.mvn/
 
 
 test/data/**

@@ -5,6 +5,10 @@ WORKDIR /app
 
 COPY pom.xml .
 
+COPY .mvn .mvn
+
+COPY settings.xml settings.xml
+
 RUN mvn -B dependency:resolve-plugins dependency:resolve
 
 COPY ./src ./src
