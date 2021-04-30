@@ -3,6 +3,7 @@ package mu.semte.ch.harvesting.valdiator.service;
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.lib.dto.DataContainer;
 import mu.semte.ch.lib.dto.Task;
+import mu.semte.ch.lib.shacl.ShaclService;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.shacl.ValidationReport;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ public class FilteringService {
 
     var report = fetchTriplesFromInputContainer(inputContainer.getValidationGraphUri());
 
-    var validTriples = writeValidTriples(task, fileContainer, shaclService.fromModel(report), importedTriples);
+    var validTriples = writeValidTriples(task, fileContainer, ShaclService.fromModel(report), importedTriples);
 
     writeErrorTriples(task, fileContainer, importedTriples, validTriples);
 

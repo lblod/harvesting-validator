@@ -5,6 +5,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.lib.dto.DataContainer;
 import mu.semte.ch.lib.dto.Task;
+import mu.semte.ch.lib.shacl.ShaclService;
 import mu.semte.ch.lib.utils.SparqlClient;
 import mu.semte.ch.lib.utils.SparqlQueryStore;
 import org.apache.commons.lang3.StringUtils;
@@ -41,7 +42,6 @@ import static org.apache.jena.shacl.engine.ShaclPaths.pathNode;
 @Service
 @Slf4j
 public class XlsReportService {
-  private final ShaclService shaclService;
   private final SparqlQueryStore queryStore;
   private final SparqlClient sparqlClient;
   private final TaskService taskService;
@@ -49,17 +49,15 @@ public class XlsReportService {
   @Value("${share-folder.path}")
   private String shareFolderPath;
 
-  public XlsReportService(ShaclService shaclService,
-                          SparqlQueryStore queryStore,
+  public XlsReportService(SparqlQueryStore queryStore,
                           SparqlClient sparqlClient, TaskService taskService) {
-    this.shaclService = shaclService;
     this.queryStore = queryStore;
     this.sparqlClient = sparqlClient;
     this.taskService = taskService;
   }
 
   public void writeReport(Task task, Model report, DataContainer fileContainer) {
-    ValidationReport validationReport = shaclService.fromModel(report);
+    ValidationReport validationReport = ShaclService.fromModel(report);
 
     if (validationReport.conforms()) {
       log.debug("report conforms, skipping writing xlsx report...");
