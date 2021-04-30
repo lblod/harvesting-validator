@@ -2,9 +2,13 @@ package mu.semte.ch.harvesting.valdiator.config;
 
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.lib.config.CoreConfig;
+import mu.semte.ch.lib.shacl.ShaclService;
 import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.shacl.Shapes;
+import org.apache.jena.shacl.sys.ShaclSystem;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +32,12 @@ public class ApplicationConfig {
     Graph shapesGraph = toModel(applicationProfile.getInputStream(),
                                 filenameToLang(applicationProfile.getFilename(), Lang.TURTLE)).getGraph();
     return Shapes.parse(shapesGraph);
+
+  }
+  @Bean
+  public ShaclService shaclService(@Autowired Shapes defaultApplicationProfile) throws IOException {
+    return new ShaclService(defaultApplicationProfile);
+
   }
 
 }
