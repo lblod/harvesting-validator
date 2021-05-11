@@ -43,8 +43,8 @@ public class AppController {
   }
 
   @PostMapping("/retry")
-  public ResponseEntity<Void> retry(@RequestParam("entry") String deltaEntry) {
-    pipelineService.runPipeline(deltaEntry);
+  public ResponseEntity<Void> retry(@RequestParam("taskUri") String taskUri) {
+    pipelineService.runPipeline(taskUri);
     return ResponseEntity.ok().build();
   }
 }
