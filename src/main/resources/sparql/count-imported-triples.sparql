@@ -1,5 +1,1 @@
- SELECT count(?s) WHERE {
-                      GRAPH <%s> {
-                           ?s ?p ?o
-                      }
-                }
+ SELECT (count(?s)) WHERE { GRAPH <%s> { ?s ?p ?o } }
