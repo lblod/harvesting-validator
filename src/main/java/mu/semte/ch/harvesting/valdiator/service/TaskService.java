@@ -92,7 +92,7 @@ public class TaskService {
     });
     var pagesCount = countTriples > defaultLimitSize ? countTriples / defaultLimitSize : defaultLimitSize;
 
-    return IntStream.range(0, pagesCount)
+    return IntStream.rangeClosed(0, pagesCount)
              .mapToObj(page -> {
                var query = queryStore.getQueryWithParameters("loadImportedTriplesStream",
                                                              Map.of("graphUri",graphImportedTriples,

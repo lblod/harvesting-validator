@@ -1,8 +1,17 @@
 SELECT ?s ?p ?o WHERE
 {
-  GRAPH <${graphUri}>
-  {
-    ?s ?p ?o
-  }
+    {
+         SELECT  DISTINCT  ?s
+                           ?p
+                           ?o
+          WHERE
+             {
+                GRAPH <${graphUri}>
+                 {
+                   ?s ?p ?o
+                 }
+             }
+       ORDER BY ?s ?p ?o
+     }
 
-}  order by ?s  limit ${limitSize?string.computer} offset ${offsetNumber?string.computer  }
+}  limit ${limitSize?string.computer} offset ${offsetNumber?string.computer  }
