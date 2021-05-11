@@ -6,6 +6,7 @@ import mu.semte.ch.harvesting.valdiator.service.PipelineService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
@@ -38,6 +39,12 @@ public class AppController {
     // NOTE: we don't wait as we do not want to keep hold off the connection.
     entries.forEach(pipelineService::runPipeline);
 
+    return ResponseEntity.ok().build();
+  }
+
+  @PostMapping("/retry")
+  public ResponseEntity<Void> retry(@RequestParam("entry") String deltaEntry) {
+    pipelineService.runPipeline(deltaEntry);
     return ResponseEntity.ok().build();
   }
 }
