@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import static java.util.Optional.ofNullable;
 import static mu.semte.ch.harvesting.valdiator.Constants.ERROR_URI_PREFIX;
@@ -41,6 +42,8 @@ public class TaskService {
   private String shareFolderPath;
   @Value("${sparql.defaultBatchSize}")
   private int defaultBatchSize;
+  @Value("${sparql.defaultLimitSize}")
+  private int defaultLimitSize;
 
   public TaskService(SparqlQueryStore queryStore, SparqlClient sparqlClient) {
     this.queryStore = queryStore;
@@ -80,8 +83,25 @@ public class TaskService {
   }
 
   public Model loadImportedTriples(String graphImportedTriples) {
-    String queryTask = queryStore.getQuery("loadImportedTriples").formatted(graphImportedTriples);
-    return sparqlClient.executeSelectQuery(queryTask);
+    var countTriplesQuery = queryStore.getQuery("countImportedTriples").formatted(graphImportedTriples);
+    var countTriples = sparqlClient.executeSelectQuery(countTriplesQuery,resultSet -> {
+      if (!resultSet.hasNext()){
+        return 0;
+      }
+      return resultSet.next().getLiteral("s").getInt();
+    });
+    var pagesCount = countTriples > defaultLimitSize ? countTriples / defaultLimitSize : defaultLimitSize;
+
+    return IntStream.rangeClosed(0, pagesCount)
+             .mapToObj(page -> {
+               var query = queryStore.getQueryWithParameters("loadImportedTriplesStream",
+                                                             Map.of("graphUri",graphImportedTriples,
+                                                                    "limitSize", defaultLimitSize,
+                                                                    "offsetNumber", page == 0 ? 0 : page * defaultLimitSize
+                                                             )
+               );
+               return sparqlClient.executeSelectQuery(query);
+             }).reduce(ModelFactory.createDefaultModel(), Model::add);
   }
 
   public void updateTaskStatus(Task task, String status) {

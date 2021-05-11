@@ -1,0 +1,8 @@
+SELECT ?s ?p ?o WHERE
+{
+  GRAPH <${graphUri}>
+  {
+    ?s ?p ?o
+  }
+
+}  order by ?s  limit ${limitSize} offset ${offsetNumber}

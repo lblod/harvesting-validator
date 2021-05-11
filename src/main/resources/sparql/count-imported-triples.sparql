@@ -1,0 +1,9 @@
+
+SELECT count(?s) WHERE
+{
+  GRAPH <%s>
+  {
+    ?s ?p ?o
+  }
+
+}
