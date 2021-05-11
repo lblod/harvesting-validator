@@ -88,7 +88,7 @@ public class TaskService {
       if (!resultSet.hasNext()){
         return 0;
       }
-      return resultSet.next().getLiteral("s").getInt();
+      return resultSet.next().getLiteral("count").getInt();
     });
     var pagesCount = countTriples > defaultLimitSize ? countTriples / defaultLimitSize : defaultLimitSize;
 
