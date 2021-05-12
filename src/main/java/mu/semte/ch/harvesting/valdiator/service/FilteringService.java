@@ -25,10 +25,10 @@ public class FilteringService {
   public void runFilterPipeline(Task task) {
     var inputContainer = taskService.selectInputContainer(task).get(0);
     log.debug("input container: {}", inputContainer);
-    var importedTriples = fetchTriplesFromInputContainer(inputContainer.getGraphUri());
+    var importedTriples = taskService.fetchTriplesFromInputContainer(inputContainer.getGraphUri());
     var fileContainer = DataContainer.builder().build();
 
-    var report = fetchTriplesFromInputContainer(inputContainer.getValidationGraphUri());
+    var report = taskService.fetchTriplesFromInputContainer(inputContainer.getValidationGraphUri());
 
     var validTriples = writeValidTriples(task, fileContainer, ShaclService.fromModel(report), importedTriples);
 
@@ -66,10 +66,6 @@ public class FilteringService {
     return validTriples;
   }
 
-
-  private Model fetchTriplesFromInputContainer(String graphUri) {
-    return taskService.loadImportedTriples(graphUri);
-  }
 
 
 }

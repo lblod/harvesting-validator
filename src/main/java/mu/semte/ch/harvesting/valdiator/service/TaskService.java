@@ -82,7 +82,7 @@ public class TaskService {
 
   }
 
-  public Model loadImportedTriples(String graphImportedTriples) {
+  public Model fetchTriplesFromInputContainer(String graphImportedTriples) {
     var countTriplesQuery = queryStore.getQuery("countImportedTriples").formatted(graphImportedTriples);
     var countTriples = sparqlClient.executeSelectQuery(countTriplesQuery,resultSet -> {
       if (!resultSet.hasNext()){

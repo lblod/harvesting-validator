@@ -26,7 +26,7 @@ public class ValidatingService {
 
   public void runValidatePipeline(Task task) {
     var inputContainer = taskService.selectInputContainer(task).get(0);
-    var importedTriples = taskService.loadImportedTriples(inputContainer.getGraphUri());
+    var importedTriples = taskService.fetchTriplesFromInputContainer(inputContainer.getGraphUri());
 
     var fileContainer = DataContainer.builder().build();
 
