@@ -97,7 +97,7 @@ public class TaskService {
                var query = queryStore.getQueryWithParameters("loadImportedTriplesStream",
                                                              Map.of("graphUri",graphImportedTriples,
                                                                     "limitSize", defaultLimitSize,
-                                                                    "offsetNumber", page == 0 ? 0 : page * defaultLimitSize
+                                                                    "offsetNumber",page * defaultLimitSize
                                                              )
                );
                return sparqlClient.executeSelectQuery(query);
