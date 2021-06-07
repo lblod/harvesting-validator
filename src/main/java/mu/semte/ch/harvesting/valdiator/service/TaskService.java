@@ -26,11 +26,7 @@ import java.util.stream.IntStream;
 import static java.util.Optional.ofNullable;
 import static mu.semte.ch.harvesting.valdiator.Constants.ERROR_URI_PREFIX;
 import static mu.semte.ch.harvesting.valdiator.Constants.LOGICAL_FILE_PREFIX;
-import static mu.semte.ch.lib.utils.ModelUtils.filenameToLang;
-import static mu.semte.ch.lib.utils.ModelUtils.formattedDate;
-import static mu.semte.ch.lib.utils.ModelUtils.getContentType;
-import static mu.semte.ch.lib.utils.ModelUtils.getExtension;
-import static mu.semte.ch.lib.utils.ModelUtils.uuid;
+import static mu.semte.ch.lib.utils.ModelUtils.*;
 
 @Service
 @Slf4j
@@ -44,6 +40,8 @@ public class TaskService {
   private int defaultBatchSize;
   @Value("${sparql.defaultLimitSize}")
   private int defaultLimitSize;
+  @Value("${sparql.maxRetry}")
+  private int maxRetry;
 
   public TaskService(SparqlQueryStore queryStore, SparqlClient sparqlClient) {
     this.queryStore = queryStore;
@@ -84,8 +82,8 @@ public class TaskService {
 
   public Model fetchTriplesFromInputContainer(String graphImportedTriples) {
     var countTriplesQuery = queryStore.getQuery("countImportedTriples").formatted(graphImportedTriples);
-    var countTriples = sparqlClient.executeSelectQuery(countTriplesQuery,resultSet -> {
-      if (!resultSet.hasNext()){
+    var countTriples = sparqlClient.executeSelectQuery(countTriplesQuery, resultSet -> {
+      if (!resultSet.hasNext()) {
         return 0;
       }
       return resultSet.next().getLiteral("count").getInt();
@@ -93,15 +91,15 @@ public class TaskService {
     var pagesCount = countTriples > defaultLimitSize ? countTriples / defaultLimitSize : defaultLimitSize;
 
     return IntStream.rangeClosed(0, pagesCount)
-             .mapToObj(page -> {
-               var query = queryStore.getQueryWithParameters("loadImportedTriplesStream",
-                                                             Map.of("graphUri",graphImportedTriples,
-                                                                    "limitSize", defaultLimitSize,
-                                                                    "offsetNumber",page * defaultLimitSize
-                                                             )
-               );
-               return sparqlClient.executeSelectQuery(query);
-             }).reduce(ModelFactory.createDefaultModel(), Model::add);
+                    .mapToObj(page -> {
+                      var query = queryStore.getQueryWithParameters("loadImportedTriplesStream",
+                                                                    Map.of("graphUri", graphImportedTriples,
+                                                                           "limitSize", defaultLimitSize,
+                                                                           "offsetNumber", page * defaultLimitSize
+                                                                    )
+                      );
+                      return sparqlClient.executeSelectQuery(query);
+                    }).reduce(ModelFactory.createDefaultModel(), Model::add);
   }
 
   public void updateTaskStatus(Task task, String status) {
@@ -118,13 +116,32 @@ public class TaskService {
     List<Triple> triples = model.getGraph().find().toList(); //duplicate so we can splice
     Lists.partition(triples, defaultBatchSize)
          .stream()
-         .parallel()
+         .sequential()
          .map(batch -> {
            Model batchModel = ModelFactory.createDefaultModel();
            Graph batchGraph = batchModel.getGraph();
            batch.forEach(batchGraph::add);
            return batchModel;
-         }).forEach(batchModel -> sparqlClient.insertModel(graph, batchModel));
+         })
+         .forEach(batchModel -> this.insertModelOrRetry (graph, batchModel));
+  }
+
+  private void insertModelOrRetry(String graph, Model batchModel) {
+    int retryCount = 0;
+    boolean success = false;
+    do {
+      try {
+        sparqlClient.insertModel(graph, batchModel);
+        success = true;
+      }
+      catch (Exception e) {
+        log.error("an error occurred, retry count {}, max retry {}, error: {}", retryCount, maxRetry, e);
+        retryCount += 1;
+      }
+    } while (retryCount < maxRetry);
+    if (!success) {
+      throw new RuntimeException("Could not insert batch model");
+    }
   }
 
   @SneakyThrows
@@ -144,17 +161,17 @@ public class TaskService {
     var file = ModelUtils.toFile(content, rdfLang, path);
     var fileSize = file.length();
     var queryParameters = ImmutableMap.<String, Object>builder()
-            .put("graph", graph)
-            .put("physicalFile", physicalFile)
-            .put("logicalFile", logicalFile)
-            .put("phyId", phyId)
-            .put("phyFilename", phyFilename)
-            .put("now", now)
-            .put("fileSize", fileSize)
-            .put("loId", loId)
-            .put("logicalFileName", logicalFileName)
-            .put("fileExtension", "nt")
-            .put("contentType", contentType).build();
+                                      .put("graph", graph)
+                                      .put("physicalFile", physicalFile)
+                                      .put("logicalFile", logicalFile)
+                                      .put("phyId", phyId)
+                                      .put("phyFilename", phyFilename)
+                                      .put("now", now)
+                                      .put("fileSize", fileSize)
+                                      .put("loId", loId)
+                                      .put("logicalFileName", logicalFileName)
+                                      .put("fileExtension", "nt")
+                                      .put("contentType", contentType).build();
 
     var queryStr = queryStore.getQueryWithParameters("writeTtlFile", queryParameters);
     sparqlClient.executeUpdateQuery(queryStr);
