@@ -37,7 +37,7 @@ public class FilteringService {
     // import filtered triples
     var filteredGraph = "%s/%s".formatted(FILTER_GRAPH_PREFIX, task.getId());
 
-    taskService.importTriples(filteredGraph, validTriples);
+    taskService.importTriples(task, filteredGraph, validTriples);
 
     // append result graph
     var graphContainer = DataContainer.builder()

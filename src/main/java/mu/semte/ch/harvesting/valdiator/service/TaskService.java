@@ -26,6 +26,7 @@ import java.util.stream.IntStream;
 import static java.util.Optional.ofNullable;
 import static mu.semte.ch.harvesting.valdiator.Constants.ERROR_URI_PREFIX;
 import static mu.semte.ch.harvesting.valdiator.Constants.LOGICAL_FILE_PREFIX;
+import static mu.semte.ch.harvesting.valdiator.Constants.STATUS_FAILED;
 import static mu.semte.ch.lib.utils.ModelUtils.*;
 
 @Service
@@ -110,29 +111,30 @@ public class TaskService {
     sparqlClient.executeUpdateQuery(queryUpdate);
   }
 
-  public void importTriples(String graph,
+  public void importTriples(Task task, String graph,
                             Model model) {
     log.debug("running import triples with batch size {}, model size: {}, graph: <{}>", defaultBatchSize, model.size(), graph);
     List<Triple> triples = model.getGraph().find().toList(); //duplicate so we can splice
     Lists.partition(triples, defaultBatchSize)
          .stream()
-         .sequential()
+         .parallel()
          .map(batch -> {
            Model batchModel = ModelFactory.createDefaultModel();
            Graph batchGraph = batchModel.getGraph();
            batch.forEach(batchGraph::add);
            return batchModel;
          })
-         .forEach(batchModel -> this.insertModelOrRetry (graph, batchModel));
+         .forEach(batchModel -> this.insertModelOrRetry (task, graph, batchModel));
   }
 
-  private void insertModelOrRetry(String graph, Model batchModel) {
+  private void insertModelOrRetry(Task task, String graph, Model batchModel) {
     int retryCount = 0;
     boolean success = false;
     do {
       try {
         sparqlClient.insertModel(graph, batchModel);
         success = true;
+        break;
       }
       catch (Exception e) {
         log.error("an error occurred, retry count {}, max retry {}, error: {}", retryCount, maxRetry, e);
@@ -140,7 +142,8 @@ public class TaskService {
       }
     } while (retryCount < maxRetry);
     if (!success) {
-      throw new RuntimeException("Could not insert batch model");
+      this.updateTaskStatus(task, STATUS_FAILED);
+      this.appendTaskError(task, "Reaching max retries. Check the logs for further details.");
     }
   }
 

@@ -37,7 +37,7 @@ public class ValidatingService {
 
     // import validation report
     var reportGraph = "%s/%s".formatted(Constants.VALIDATING_GRAPH_PREFIX, task.getId());
-    taskService.importTriples(reportGraph, report);
+    taskService.importTriples(task, reportGraph, report);
 
     // append result graph
     var resultContainer = DataContainer.builder()
