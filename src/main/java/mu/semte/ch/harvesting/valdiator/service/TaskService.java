@@ -116,9 +116,9 @@ public class TaskService {
         return null;
       }
       var qs = resultSet.next();
-      if(qs.getLiteral("path") ==null)
+      if(qs.getResource("path") ==null)
         return null;
-      return resultSet.next().getLiteral("path").getString();
+      return qs.getResource("path").getURI();
     });
 
     var file = ofNullable(path).map(p-> p.replace("share://",""))

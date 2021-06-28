@@ -41,11 +41,16 @@ public class ValidatingService {
     // import validation report
     //var reportGraph = "%s/%s".formatted(Constants.VALIDATING_GRAPH_PREFIX, task.getId());
     //taskService.importTriples(task, reportGraph, report);
+    var dataContainer = DataContainer.builder()
+                                     .graphUri(reportGraph)
+                                     .build();
+    taskService.appendTaskResultFile(task, dataContainer);
+
 
     // append result graph
     var resultContainer = DataContainer.builder()
                                        .graphUri(inputContainer.getGraphUri())
-                                       .validationGraphUri(reportGraph)
+                                       .validationGraphUri(dataContainer.getUri())
                                        .build();
 
     taskService.appendTaskResultGraph(task, resultContainer);

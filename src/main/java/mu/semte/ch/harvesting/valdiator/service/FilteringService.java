@@ -41,9 +41,13 @@ public class FilteringService {
     //var filteredGraph = "%s/%s".formatted(FILTER_GRAPH_PREFIX, task.getId());
     //taskService.importTriples(task, filteredGraph, validTriples);
 
+    var dataContainer = DataContainer.builder()
+                                     .graphUri(filteredGraph)
+                                     .build();
+    taskService.appendTaskResultFile(task, dataContainer);
     // append result graph
     var graphContainer = DataContainer.builder()
-                                      .graphUri(filteredGraph)
+                                      .graphUri(dataContainer.getUri())
                                       .build();
     taskService.appendTaskResultGraph(task, graphContainer);
   }
