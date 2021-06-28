@@ -9,14 +9,18 @@ import mu.semte.ch.lib.dto.Task;
 import mu.semte.ch.lib.utils.ModelUtils;
 import mu.semte.ch.lib.utils.SparqlClient;
 import mu.semte.ch.lib.utils.SparqlQueryStore;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.riot.Lang;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -81,6 +85,7 @@ public class TaskService {
 
   }
 
+  @Deprecated
   public Model fetchTriplesFromInputContainer(String graphImportedTriples) {
     var countTriplesQuery = queryStore.getQuery("countImportedTriples").formatted(graphImportedTriples);
     var countTriples = sparqlClient.executeSelectQuery(countTriplesQuery, resultSet -> {
@@ -101,6 +106,31 @@ public class TaskService {
                       );
                       return sparqlClient.executeSelectQuery(query);
                     }).reduce(ModelFactory.createDefaultModel(), Model::add);
+  }
+
+  @SneakyThrows
+  public Model fetchTripleFromFileInputContainer(String fileContainerUri){
+    var query = queryStore.getQuery("fetchTripleFromFileInputContainer").formatted(fileContainerUri);
+    var path = sparqlClient.executeSelectQuery(query,resultSet -> {
+      if (!resultSet.hasNext()) {
+        return null;
+      }
+      var qs = resultSet.next();
+      if(qs.getLiteral("path") ==null)
+        return null;
+      return resultSet.next().getLiteral("path").getString();
+    });
+
+    var file = ofNullable(path).map(p-> p.replace("share://",""))
+                    .filter(StringUtils::isNotEmpty)
+                    .map(p -> new File(shareFolderPath, p))
+                     .filter(File::exists)
+                    .orElseThrow(()->{
+                      log.error(" file '{}' not found", fileContainerUri);
+                      throw new RuntimeException("path for file '%s' is empty or file not found".formatted(fileContainerUri));
+                    });
+
+    return ModelUtils.toModel(FileUtils.openInputStream(file), Lang.TURTLE);
   }
 
   public void updateTaskStatus(Task task, String status) {

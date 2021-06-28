@@ -8,6 +8,8 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.shacl.ValidationReport;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 import static mu.semte.ch.harvesting.valdiator.Constants.FILTER_GRAPH_PREFIX;
 
 @Service
@@ -25,19 +27,19 @@ public class FilteringService {
   public void runFilterPipeline(Task task) {
     var inputContainer = taskService.selectInputContainer(task).get(0);
     log.debug("input container: {}", inputContainer);
-    var importedTriples = taskService.fetchTriplesFromInputContainer(inputContainer.getGraphUri());
+    var importedTriples = taskService.fetchTripleFromFileInputContainer(inputContainer.getGraphUri());
     var fileContainer = DataContainer.builder().build();
 
-    var report = taskService.fetchTriplesFromInputContainer(inputContainer.getValidationGraphUri());
+    var report = taskService.fetchTripleFromFileInputContainer(inputContainer.getValidationGraphUri());
 
     var validTriples = writeValidTriples(task, fileContainer, ShaclService.fromModel(report), importedTriples);
+    var filteredGraph = validTriples.getKey().getGraphUri();
 
-    writeErrorTriples(task, fileContainer, importedTriples, validTriples);
+    writeErrorTriples(task, fileContainer, importedTriples, validTriples.getValue());
 
     // import filtered triples
-    var filteredGraph = "%s/%s".formatted(FILTER_GRAPH_PREFIX, task.getId());
-
-    taskService.importTriples(task, filteredGraph, validTriples);
+    //var filteredGraph = "%s/%s".formatted(FILTER_GRAPH_PREFIX, task.getId());
+    //taskService.importTriples(task, filteredGraph, validTriples);
 
     // append result graph
     var graphContainer = DataContainer.builder()
@@ -56,14 +58,14 @@ public class FilteringService {
     taskService.appendTaskResultFile(task, dataContainer);
   }
 
-  private Model writeValidTriples(Task task, DataContainer fileContainer, ValidationReport report, Model importedTriples) {
+  private Map.Entry<DataContainer, Model> writeValidTriples(Task task, DataContainer fileContainer, ValidationReport report, Model importedTriples) {
     log.debug("filter non conform triples...");
     var validTriples = shaclService.filter(importedTriples, report);
     var dataContainer = fileContainer.toBuilder()
                                      .graphUri(taskService.writeTtlFile(task.getGraph(), validTriples, "valid-triples.ttl"))
                                      .build();
     taskService.appendTaskResultFile(task, dataContainer);
-    return validTriples;
+    return Map.entry(dataContainer, validTriples);
   }
 
 

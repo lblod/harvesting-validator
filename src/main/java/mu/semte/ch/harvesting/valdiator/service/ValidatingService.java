@@ -9,6 +9,8 @@ import mu.semte.ch.lib.utils.ModelUtils;
 import org.apache.jena.rdf.model.Model;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 @Slf4j
 public class ValidatingService {
@@ -26,18 +28,19 @@ public class ValidatingService {
 
   public void runValidatePipeline(Task task) {
     var inputContainer = taskService.selectInputContainer(task).get(0);
-    var importedTriples = taskService.fetchTriplesFromInputContainer(inputContainer.getGraphUri());
+    var importedTriples = taskService.fetchTripleFromFileInputContainer(inputContainer.getGraphUri());
 
     var fileContainer = DataContainer.builder().build();
 
     var report = writeValidationReport(task, fileContainer, importedTriples);
+    var reportGraph = report.getKey().getGraphUri();
 
     // write xls report
-    xlsReportService.writeReport(task, report, fileContainer);
+    xlsReportService.writeReport(task, report.getValue(), fileContainer);
 
     // import validation report
-    var reportGraph = "%s/%s".formatted(Constants.VALIDATING_GRAPH_PREFIX, task.getId());
-    taskService.importTriples(task, reportGraph, report);
+    //var reportGraph = "%s/%s".formatted(Constants.VALIDATING_GRAPH_PREFIX, task.getId());
+    //taskService.importTriples(task, reportGraph, report);
 
     // append result graph
     var resultContainer = DataContainer.builder()
@@ -49,7 +52,7 @@ public class ValidatingService {
   }
 
 
-  private Model writeValidationReport(Task task, DataContainer fileContainer, Model importedTriples) {
+  private Map.Entry<DataContainer, Model> writeValidationReport(Task task, DataContainer fileContainer, Model importedTriples) {
     log.debug("generate validation reports...");
     var report = shaclService.validate(importedTriples.getGraph());
     log.debug("triples conforms: {}", report.conforms());
@@ -58,7 +61,7 @@ public class ValidatingService {
                                      .graphUri(taskService.writeTtlFile(task.getGraph(), reportModel, "validation-report.ttl"))
                                      .build();
     taskService.appendTaskResultFile(task, dataContainer);
-    return reportModel;
+    return Map.entry(dataContainer, reportModel);
   }
 
 }
