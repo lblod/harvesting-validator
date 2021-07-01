@@ -1,8 +1,10 @@
 server:
   port: ${SERVER_PORT:80}
 
-application-profile:
-  default: file:${APPLICATION_PROFILE_PATH:/config/application-profile.ttl}
+shacl:
+  application-profile:
+    default: file:${APPLICATION_PROFILE_PATH:/config/application-profile.ttl}
+  strictModeFiltering: ${STRICT_MODE_FILTERING:false}
 
 share-folder:
   path: ${SHARE_FOLDER_DIRECTORY:/share}

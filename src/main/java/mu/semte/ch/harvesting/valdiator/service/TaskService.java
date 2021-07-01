@@ -260,7 +260,7 @@ public class TaskService {
     var id = uuid();
     var uri = ERROR_URI_PREFIX + id;
 
-    Map<String, Object> parameters = Map.of("task", task, "id", id, "uri", uri, "message", message);
+    Map<String, Object> parameters = Map.of("task", task, "id", id, "uri", uri, "message", ofNullable(message).orElse("Unexpected error"));
     var queryStr = queryStore.getQueryWithParameters("appendTaskError", parameters);
 
     sparqlClient.executeUpdateQuery(queryStr);

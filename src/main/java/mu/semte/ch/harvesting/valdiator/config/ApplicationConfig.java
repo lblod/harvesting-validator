@@ -4,10 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.lib.config.CoreConfig;
 import mu.semte.ch.lib.shacl.ShaclService;
 import org.apache.jena.graph.Graph;
-import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.shacl.Shapes;
-import org.apache.jena.shacl.sys.ShaclSystem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -24,8 +22,10 @@ import static mu.semte.ch.lib.utils.ModelUtils.toModel;
 @Import(CoreConfig.class)
 @Slf4j
 public class ApplicationConfig {
-  @Value("${application-profile.default}")
+  @Value("${shacl.application-profile.default}")
   private Resource applicationProfile;
+  @Value("${shacl.strictModeFiltering}")
+  private boolean strictModeFiltering;
 
   @Bean
   public Shapes defaultApplicationProfile() throws IOException {
@@ -36,7 +36,7 @@ public class ApplicationConfig {
   }
   @Bean
   public ShaclService shaclService(@Autowired Shapes defaultApplicationProfile) throws IOException {
-    return new ShaclService(defaultApplicationProfile);
+    return new ShaclService(defaultApplicationProfile,strictModeFiltering);
 
   }
 
