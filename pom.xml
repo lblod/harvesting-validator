@@ -44,7 +44,7 @@
     <guava.version>29.0-jre</guava.version>
     <commons-text.version>1.9</commons-text.version>
     <poi.version>5.0.0</poi.version>
-    <mu-java.version>1.0.11</mu-java.version>
+    <mu-java.version>1.0.12</mu-java.version>
   </properties>
   <scm>
     <connection>
