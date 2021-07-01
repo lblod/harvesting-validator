@@ -172,8 +172,8 @@ public class TaskService {
       }
     } while (retryCount < maxRetry);
     if (!success) {
-      this.updateTaskStatus(task, STATUS_FAILED);
       this.appendTaskError(task, "Reaching max retries. Check the logs for further details.");
+      this.updateTaskStatus(task, STATUS_FAILED);
     }
   }
 

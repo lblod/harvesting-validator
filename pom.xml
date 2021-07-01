@@ -44,6 +44,7 @@
     <guava.version>29.0-jre</guava.version>
     <commons-text.version>1.9</commons-text.version>
     <poi.version>5.0.0</poi.version>
+    <mu-java.version>1.0.11</mu-java.version>
   </properties>
   <scm>
     <connection>
@@ -55,7 +56,7 @@
     <dependency>
       <groupId>mu.semte.ch</groupId>
       <artifactId>mu-java</artifactId>
-      <version>1.0.10</version>
+      <version>${mu-java.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.poi</groupId>
