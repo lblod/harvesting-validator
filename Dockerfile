@@ -21,4 +21,4 @@ WORKDIR /app
 
 COPY --from=builder /app/target/harvesting-validator.jar ./app.jar
 
-ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar /app/app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Dlog4j2.formatMsgNoLookups=true ${JAVA_OPTS} -jar /app/app.jar"]
