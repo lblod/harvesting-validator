@@ -45,7 +45,7 @@
     <commons-text.version>1.9</commons-text.version>
     <poi.version>5.0.0</poi.version>
     <mu-java.version>1.0.19</mu-java.version>
-    <log4j2.version>2.16.0</log4j2.version>
+    <log4j2.version>2.17.0</log4j2.version>
     <lombok.version>1.18.22</lombok.version>
   </properties>
   <scm>
