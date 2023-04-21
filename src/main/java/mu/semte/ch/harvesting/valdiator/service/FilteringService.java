@@ -10,8 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
-import static mu.semte.ch.harvesting.valdiator.Constants.FILTER_GRAPH_PREFIX;
-
 @Service
 @Slf4j
 public class FilteringService {
@@ -38,17 +36,17 @@ public class FilteringService {
     writeErrorTriples(task, fileContainer, importedTriples, validTriples.getValue());
 
     // import filtered triples
-    //var filteredGraph = "%s/%s".formatted(FILTER_GRAPH_PREFIX, task.getId());
-    //taskService.importTriples(task, filteredGraph, validTriples);
+    // var filteredGraph = "%s/%s".formatted(FILTER_GRAPH_PREFIX, task.getId());
+    // taskService.importTriples(task, filteredGraph, validTriples);
 
     var dataContainer = DataContainer.builder()
-                                     .graphUri(filteredGraph)
-                                     .build();
+        .graphUri(filteredGraph)
+        .build();
     taskService.appendTaskResultFile(task, dataContainer);
     // append result graph
     var graphContainer = DataContainer.builder()
-                                      .graphUri(dataContainer.getUri())
-                                      .build();
+        .graphUri(dataContainer.getUri())
+        .build();
     taskService.appendTaskResultGraph(task, graphContainer);
   }
 
@@ -56,22 +54,21 @@ public class FilteringService {
     var errorTriples = importedTriples.difference(validTriples);
     log.debug("Number of errored triples: {}", errorTriples.size());
     var dataContainer = fileContainer
-            .toBuilder()
-            .graphUri(taskService.writeTtlFile(task.getGraph(), errorTriples, "error-triples.ttl"))
-            .build();
+        .toBuilder()
+        .graphUri(taskService.writeTtlFile(task.getGraph(), errorTriples, "error-triples.ttl"))
+        .build();
     taskService.appendTaskResultFile(task, dataContainer);
   }
 
-  private Map.Entry<DataContainer, Model> writeValidTriples(Task task, DataContainer fileContainer, ValidationReport report, Model importedTriples) {
+  private Map.Entry<DataContainer, Model> writeValidTriples(Task task, DataContainer fileContainer,
+      ValidationReport report, Model importedTriples) {
     log.debug("filter non conform triples...");
     var validTriples = shaclService.filter(importedTriples, report);
     var dataContainer = fileContainer.toBuilder()
-                                     .graphUri(taskService.writeTtlFile(task.getGraph(), validTriples, "valid-triples.ttl"))
-                                     .build();
+        .graphUri(taskService.writeTtlFile(task.getGraph(), validTriples, "valid-triples.ttl"))
+        .build();
     taskService.appendTaskResultFile(task, dataContainer);
     return Map.entry(dataContainer, validTriples);
   }
-
-
 
 }

@@ -17,6 +17,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFLanguages;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -53,7 +54,6 @@ public class TaskService {
     this.sparqlClient = sparqlClient;
   }
 
-
   public boolean isTask(String subject) {
     String queryStr = queryStore.getQuery("isTask").formatted(subject);
 
@@ -69,16 +69,16 @@ public class TaskService {
       }
       var t = resultSet.next();
       Task task = Task.builder().task(t.getResource("task").getURI())
-                      .job(t.getResource("job").getURI())
-                      .error(ofNullable(t.getResource("error")).map(Resource::getURI).orElse(null))
-                      .id(t.getLiteral("id").getString())
-                      .created(t.getLiteral("created").getString())
-                      .modified(t.getLiteral("modified").getString())
-                      .operation(t.getResource("operation").getURI())
-                      .index(t.getLiteral("index").getString())
-                      .graph(t.getResource("graph").getURI())
-                      .status(t.getResource("status").getURI())
-                      .build();
+          .job(t.getResource("job").getURI())
+          .error(ofNullable(t.getResource("error")).map(Resource::getURI).orElse(null))
+          .id(t.getLiteral("id").getString())
+          .created(t.getLiteral("created").getString())
+          .modified(t.getLiteral("modified").getString())
+          .operation(t.getResource("operation").getURI())
+          .index(t.getLiteral("index").getString())
+          .graph(t.getResource("graph").getURI())
+          .status(t.getResource("status").getURI())
+          .build();
       log.debug("task: {}", task);
       return task;
     });
@@ -97,38 +97,36 @@ public class TaskService {
     var pagesCount = countTriples > defaultLimitSize ? countTriples / defaultLimitSize : defaultLimitSize;
 
     return IntStream.rangeClosed(0, pagesCount)
-                    .mapToObj(page -> {
-                      var query = queryStore.getQueryWithParameters("loadImportedTriplesStream",
-                                                                    Map.of("graphUri", graphImportedTriples,
-                                                                           "limitSize", defaultLimitSize,
-                                                                           "offsetNumber", page * defaultLimitSize
-                                                                    )
-                      );
-                      return sparqlClient.executeSelectQuery(query);
-                    }).reduce(ModelFactory.createDefaultModel(), Model::add);
+        .mapToObj(page -> {
+          var query = queryStore.getQueryWithParameters("loadImportedTriplesStream",
+              Map.of("graphUri", graphImportedTriples,
+                  "limitSize", defaultLimitSize,
+                  "offsetNumber", page * defaultLimitSize));
+          return sparqlClient.executeSelectQuery(query);
+        }).reduce(ModelFactory.createDefaultModel(), Model::add);
   }
 
   @SneakyThrows
-  public Model fetchTripleFromFileInputContainer(String fileContainerUri){
+  public Model fetchTripleFromFileInputContainer(String fileContainerUri) {
     var query = queryStore.getQuery("fetchTripleFromFileInputContainer").formatted(fileContainerUri);
-    var path = sparqlClient.executeSelectQuery(query,resultSet -> {
+    var path = sparqlClient.executeSelectQuery(query, resultSet -> {
       if (!resultSet.hasNext()) {
         return null;
       }
       var qs = resultSet.next();
-      if(qs.getResource("path") ==null)
+      if (qs.getResource("path") == null)
         return null;
       return qs.getResource("path").getURI();
     });
 
-    var file = ofNullable(path).map(p-> p.replace("share://",""))
-                    .filter(StringUtils::isNotEmpty)
-                    .map(p -> new File(shareFolderPath, p))
-                     .filter(File::exists)
-                    .orElseThrow(()->{
-                      log.error(" file '{}' not found", fileContainerUri);
-                      throw new RuntimeException("path for file '%s' is empty or file not found".formatted(fileContainerUri));
-                    });
+    var file = ofNullable(path).map(p -> p.replace("share://", ""))
+        .filter(StringUtils::isNotEmpty)
+        .map(p -> new File(shareFolderPath, p))
+        .filter(File::exists)
+        .orElseThrow(() -> {
+          log.error(" file '{}' not found", fileContainerUri);
+          throw new RuntimeException("path for file '%s' is empty or file not found".formatted(fileContainerUri));
+        });
 
     return ModelUtils.toModel(FileUtils.openInputStream(file), Lang.TURTLE);
   }
@@ -137,24 +135,25 @@ public class TaskService {
     log.debug("set task status to {}...", status);
 
     String queryUpdate = queryStore.getQuery("updateTaskStatus")
-                                   .formatted(status, formattedDate(LocalDateTime.now()), task.getTask());
+        .formatted(status, formattedDate(LocalDateTime.now()), task.getTask());
     sparqlClient.executeUpdateQuery(queryUpdate);
   }
 
   public void importTriples(Task task, String graph,
-                            Model model) {
-    log.debug("running import triples with batch size {}, model size: {}, graph: <{}>", defaultBatchSize, model.size(), graph);
-    List<Triple> triples = model.getGraph().find().toList(); //duplicate so we can splice
+      Model model) {
+    log.debug("running import triples with batch size {}, model size: {}, graph: <{}>", defaultBatchSize, model.size(),
+        graph);
+    List<Triple> triples = model.getGraph().find().toList(); // duplicate so we can splice
     Lists.partition(triples, defaultBatchSize)
-         .stream()
-         .parallel()
-         .map(batch -> {
-           Model batchModel = ModelFactory.createDefaultModel();
-           Graph batchGraph = batchModel.getGraph();
-           batch.forEach(batchGraph::add);
-           return batchModel;
-         })
-         .forEach(batchModel -> this.insertModelOrRetry (task, graph, batchModel));
+        .stream()
+        .parallel()
+        .map(batch -> {
+          Model batchModel = ModelFactory.createDefaultModel();
+          Graph batchGraph = batchModel.getGraph();
+          batch.forEach(batchGraph::add);
+          return batchModel;
+        })
+        .forEach(batchModel -> this.insertModelOrRetry(task, graph, batchModel));
   }
 
   private void insertModelOrRetry(Task task, String graph, Model batchModel) {
@@ -165,8 +164,7 @@ public class TaskService {
         sparqlClient.insertModel(graph, batchModel);
         success = true;
         break;
-      }
-      catch (Exception e) {
+      } catch (Exception e) {
         log.error("an error occurred, retry count {}, max retry {}, error: {}", retryCount, maxRetry, e);
         retryCount += 1;
       }
@@ -179,8 +177,8 @@ public class TaskService {
 
   @SneakyThrows
   public String writeTtlFile(String graph,
-                             Model content,
-                             String logicalFileName) {
+      Model content,
+      String logicalFileName) {
     var rdfLang = filenameToLang(logicalFileName);
     var fileExtension = getExtension(rdfLang);
     var contentType = getContentType(rdfLang);
@@ -191,20 +189,20 @@ public class TaskService {
     var loId = uuid();
     var logicalFile = "%s/%s".formatted(LOGICAL_FILE_PREFIX, loId);
     var now = formattedDate(LocalDateTime.now());
-    var file = ModelUtils.toFile(content, rdfLang, path);
+    var file = ModelUtils.toFile(content, RDFLanguages.NT, path);
     var fileSize = file.length();
     var queryParameters = ImmutableMap.<String, Object>builder()
-                                      .put("graph", graph)
-                                      .put("physicalFile", physicalFile)
-                                      .put("logicalFile", logicalFile)
-                                      .put("phyId", phyId)
-                                      .put("phyFilename", phyFilename)
-                                      .put("now", now)
-                                      .put("fileSize", fileSize)
-                                      .put("loId", loId)
-                                      .put("logicalFileName", logicalFileName)
-                                      .put("fileExtension", "nt")
-                                      .put("contentType", contentType).build();
+        .put("graph", graph)
+        .put("physicalFile", physicalFile)
+        .put("logicalFile", logicalFile)
+        .put("phyId", phyId)
+        .put("phyFilename", phyFilename)
+        .put("now", now)
+        .put("fileSize", fileSize)
+        .put("loId", loId)
+        .put("logicalFileName", logicalFileName)
+        .put("fileExtension", "ttl")
+        .put("contentType", contentType).build();
 
     var queryStr = queryStore.getQueryWithParameters("writeTtlFile", queryParameters);
     sparqlClient.executeUpdateQuery(queryStr);
@@ -212,26 +210,24 @@ public class TaskService {
   }
 
   public void appendTaskResultFile(Task task,
-                                   DataContainer dataContainer) {
+      DataContainer dataContainer) {
     var containerUri = dataContainer.getUri();
     var containerId = dataContainer.getId();
     var fileUri = dataContainer.getGraphUri();
     var queryParameters = Map.of(
-            "containerUri", containerUri,
-            "containerId", containerId,
-            "fileUri", fileUri, "task", task
-    );
+        "containerUri", containerUri,
+        "containerId", containerId,
+        "fileUri", fileUri, "task", task);
     var queryStr = queryStore.getQueryWithParameters("appendTaskResultFile", queryParameters);
 
     sparqlClient.executeUpdateQuery(queryStr);
   }
 
   public void appendTaskResultGraph(Task task,
-                                    DataContainer dataContainer) {
+      DataContainer dataContainer) {
     var queryParameters = Map.of(
-            "task", task,
-            "dataContainer", dataContainer
-    );
+        "task", task,
+        "dataContainer", dataContainer);
     var queryStr = queryStore.getQueryWithParameters("appendTaskResultGraph", queryParameters);
     log.debug(queryStr);
     sparqlClient.executeUpdateQuery(queryStr);
@@ -247,11 +243,11 @@ public class TaskService {
       }
       List<DataContainer> graphUris = new ArrayList<>();
       resultSet.forEachRemaining(r -> graphUris.add(DataContainer.builder()
-                                                                 .graphUri(r.getResource("graph").getURI())
-                                                                 .validationGraphUri(ofNullable(r.getResource("validationGraph"))
-                                                                                             .map(Resource::getURI)
-                                                                                             .orElse(null))
-                                                                 .build()));
+          .graphUri(r.getResource("graph").getURI())
+          .validationGraphUri(ofNullable(r.getResource("validationGraph"))
+              .map(Resource::getURI)
+              .orElse(null))
+          .build()));
       return graphUris;
     });
   }
@@ -260,7 +256,8 @@ public class TaskService {
     var id = uuid();
     var uri = ERROR_URI_PREFIX + id;
 
-    Map<String, Object> parameters = Map.of("task", task, "id", id, "uri", uri, "message", ofNullable(message).orElse("Unexpected error"));
+    Map<String, Object> parameters = Map.of("task", task, "id", id, "uri", uri, "message",
+        ofNullable(message).orElse("Unexpected error"));
     var queryStr = queryStore.getQueryWithParameters("appendTaskError", parameters);
 
     sparqlClient.executeUpdateQuery(queryStr);
