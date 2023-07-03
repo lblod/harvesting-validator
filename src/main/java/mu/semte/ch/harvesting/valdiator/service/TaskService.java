@@ -22,11 +22,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
+import java.util.zip.GZIPInputStream;
 
 import static java.util.Optional.ofNullable;
 import static mu.semte.ch.harvesting.valdiator.Constants.ERROR_URI_PREFIX;
@@ -128,7 +130,12 @@ public class TaskService {
           throw new RuntimeException("path for file '%s' is empty or file not found".formatted(fileContainerUri));
         });
 
-    return ModelUtils.toModel(FileUtils.openInputStream(file), Lang.TURTLE);
+    InputStream fileInputStream = FileUtils.openInputStream(file);
+    if (file.getName().endsWith(".gz")){
+      log.debug(String.format("Unzipping file '%s' before parsing", file.getName()));
+      fileInputStream = new GZIPInputStream(fileInputStream);
+    }
+    return ModelUtils.toModel(fileInputStream, Lang.TURTLE);
   }
 
   public void updateTaskStatus(Task task, String status) {
