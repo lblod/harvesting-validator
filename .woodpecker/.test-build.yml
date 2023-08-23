@@ -2,7 +2,7 @@ pipeline:
   build:
     image: plugins/docker
     settings:
-      repo: lblod/harvesting-diff-service
+      repo: lblod/harvesting-validator
       dry_run: true
 when:
   event:
