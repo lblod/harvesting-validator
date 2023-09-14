@@ -10,7 +10,6 @@ import mu.semte.ch.lib.utils.ModelUtils;
 import mu.semte.ch.lib.utils.SparqlClient;
 import mu.semte.ch.lib.utils.SparqlQueryStore;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
@@ -106,29 +105,77 @@ public class TaskService {
         }).reduce(ModelFactory.createDefaultModel(), Model::add);
   }
 
+  record PathByDerived(String derivedFrom, String path) {
+  }
+
   @SneakyThrows
-  public Model fetchTripleFromFileInputContainer(String fileContainerUri) {
-    var query = queryStore.getQuery("fetchTripleFromFileInputContainer").formatted(fileContainerUri);
+  public Model fetchValidationGraphByDerivedFrom(String containerUri, String derivedFrom) {
+    var query = queryStore.getQueryWithParameters("fetchValidationGraphByDerivedFrom", Map.of(
+        "source", containerUri,
+        "derivedFrom", derivedFrom));
     var path = sparqlClient.executeSelectQuery(query, resultSet -> {
+
       if (!resultSet.hasNext()) {
         return null;
       }
       var qs = resultSet.next();
-      if (qs.getResource("path") == null)
-        return null;
+
       return qs.getResource("path").getURI();
+
+    });
+    if (path == null) {
+      throw new RuntimeException("%s and derived from %s not found".formatted(containerUri, derivedFrom));
+    }
+    path = path.replace("share://", "");
+    var file = new File(shareFolderPath, path);
+
+    if (!file.exists()) {
+      throw new RuntimeException("file %s doesn't exist".formatted(path));
+    }
+    return ModelUtils.toModel(FileUtils.openInputStream(file), Lang.TURTLE);
+
+  }
+
+  @SneakyThrows
+  public List<ModelByDerived> fetchTripleFromFileInputContainer(String fileContainerUri) {
+    var query = queryStore.getQuery("fetchTripleFromFileInputContainer").formatted(fileContainerUri);
+    var pathsByDerived = sparqlClient.executeSelectQuery(query, resultSet -> {
+
+      if (!resultSet.hasNext()) {
+        return null;
+      }
+      var byDerived = new ArrayList<PathByDerived>();
+
+      while (resultSet.hasNext()) {
+        var qs = resultSet.next();
+        byDerived.add(new PathByDerived(qs.getResource("derivedFrom").getURI(), qs.getResource("path").getURI()));
+      }
+
+      return byDerived;
+
     });
 
-    var file = ofNullable(path).map(p -> p.replace("share://", ""))
-        .filter(StringUtils::isNotEmpty)
-        .map(p -> new File(shareFolderPath, p))
-        .filter(File::exists)
-        .orElseThrow(() -> {
-          log.error(" file '{}' not found", fileContainerUri);
-          throw new RuntimeException("path for file '%s' is empty or file not found".formatted(fileContainerUri));
-        });
+    if (pathsByDerived == null) {
+      log.error(" files '{}' not found", fileContainerUri);
+      throw new RuntimeException(
+          "paths for file container '%s' is empty or file/derivedFrom not found".formatted(fileContainerUri));
 
-    return ModelUtils.toModel(FileUtils.openInputStream(file), Lang.TURTLE);
+    }
+
+    var modelsByDerived = new ArrayList<ModelByDerived>();
+    for (var pbd : pathsByDerived) {
+      var path = pbd.path.replace("share://", "");
+      var file = new File(shareFolderPath, path);
+      if (!file.exists()) {
+        throw new RuntimeException("file %s doesn't exist".formatted(path));
+      }
+      var modelByDerived = new ModelByDerived(pbd.derivedFrom,
+          ModelUtils.toModel(FileUtils.openInputStream(file), Lang.TURTLE));
+      modelsByDerived.add(modelByDerived);
+
+    }
+    return modelsByDerived;
+
   }
 
   public void updateTaskStatus(Task task, String status) {
@@ -177,7 +224,7 @@ public class TaskService {
 
   @SneakyThrows
   public String writeTtlFile(String graph,
-      Model content,
+      ModelByDerived modelByDerived,
       String logicalFileName) {
     var rdfLang = filenameToLang(logicalFileName);
     var fileExtension = getExtension(rdfLang);
@@ -189,7 +236,7 @@ public class TaskService {
     var loId = uuid();
     var logicalFile = "%s/%s".formatted(LOGICAL_FILE_PREFIX, loId);
     var now = formattedDate(LocalDateTime.now());
-    var file = ModelUtils.toFile(content, RDFLanguages.NT, path);
+    var file = ModelUtils.toFile(modelByDerived.model(), RDFLanguages.NT, path);
     var fileSize = file.length();
     var queryParameters = ImmutableMap.<String, Object>builder()
         .put("graph", graph)
@@ -200,6 +247,7 @@ public class TaskService {
         .put("now", now)
         .put("fileSize", fileSize)
         .put("loId", loId)
+        .put("derivedFrom", modelByDerived.derivedFrom())
         .put("logicalFileName", logicalFileName)
         .put("fileExtension", "ttl")
         .put("contentType", contentType).build();
