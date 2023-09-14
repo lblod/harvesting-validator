@@ -50,13 +50,13 @@ public class XlsReportService {
   private String shareFolderPath;
 
   public XlsReportService(SparqlQueryStore queryStore,
-                          SparqlClient sparqlClient, TaskService taskService) {
+      SparqlClient sparqlClient, TaskService taskService) {
     this.queryStore = queryStore;
     this.sparqlClient = sparqlClient;
     this.taskService = taskService;
   }
 
-  public void writeReport(Task task, Model report, DataContainer fileContainer) {
+  public void writeReport(Task task, Model report, DataContainer fileContainer, String derivedFrom) {
     ValidationReport validationReport = ShaclService.fromModel(report);
 
     if (validationReport.conforms()) {
@@ -67,8 +67,8 @@ public class XlsReportService {
     Workbook workbook = new XSSFWorkbook();
 
     var groupedByPath = validationReport.getEntries()
-                                        .stream()
-                                        .collect(Collectors.groupingBy(reportEntry -> pathNode(reportEntry.resultPath()).getLocalName()));
+        .stream()
+        .collect(Collectors.groupingBy(reportEntry -> pathNode(reportEntry.resultPath()).getLocalName()));
 
     Sheet sheet = workbook.createSheet("Statistics");
 
@@ -96,21 +96,21 @@ public class XlsReportService {
         ReportEntry reportEntry = list.get(i);
 
         detailRow.createCell(0).setCellValue(ofNullable(reportEntry.focusNode())
-                                                     .map(ShLib::displayStr)
-                                                     .map(this::abbreviate)
-                                                     .orElse(""));
+            .map(ShLib::displayStr)
+            .map(this::abbreviate)
+            .orElse(""));
         detailRow.createCell(1).setCellValue(ofNullable(reportEntry.value())
-                                                     .map(ShLib::displayStr)
-                                                     .map(this::abbreviate)
-                                                     .orElse(""));
+            .map(ShLib::displayStr)
+            .map(this::abbreviate)
+            .orElse(""));
         detailRow.createCell(2).setCellValue(ofNullable(reportEntry.message())
-                                                     .map(this::abbreviate)
-                                                     .orElse(""));
+            .map(this::abbreviate)
+            .orElse(""));
         detailRow.createCell(3).setCellValue(ofNullable(reportEntry.resultPath())
-                                                     .map(ShaclPaths::pathNode)
-                                                     .map(ShLib::displayStr)
-                                                     .map(this::abbreviate)
-                                                     .orElse(""));
+            .map(ShaclPaths::pathNode)
+            .map(ShLib::displayStr)
+            .map(this::abbreviate)
+            .orElse(""));
 
       }
 
@@ -127,8 +127,8 @@ public class XlsReportService {
     totalCellValue.setCellStyle(cellStyle);
     autoSizeColumns(workbook);
     var dataContainer = fileContainer.toBuilder()
-                                     .graphUri(writeFile(task.getGraph(), workbook))
-                                     .build();
+        .graphUri(writeFile(task.getGraph(), workbook, derivedFrom))
+        .build();
     taskService.appendTaskResultFile(task, dataContainer);
   }
 
@@ -153,7 +153,7 @@ public class XlsReportService {
   }
 
   @SneakyThrows
-  private String writeFile(String graph, Workbook workbook) {
+  private String writeFile(String graph, Workbook workbook, String derivedFrom) {
     var fileExtension = "xlsx";
     var logicalFileName = "report-statistics." + fileExtension;
     var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -170,17 +170,18 @@ public class XlsReportService {
     workbook.close();
     var fileSize = file.length();
     var queryParameters = ImmutableMap.<String, Object>builder()
-            .put("graph", graph)
-            .put("physicalFile", physicalFile)
-            .put("logicalFile", logicalFile)
-            .put("phyId", phyId)
-            .put("phyFilename", phyFilename)
-            .put("now", now)
-            .put("fileSize", fileSize)
-            .put("loId", loId)
-            .put("logicalFileName", logicalFileName)
-            .put("fileExtension", "nt")
-            .put("contentType", contentType).build();
+        .put("graph", graph)
+        .put("physicalFile", physicalFile)
+        .put("logicalFile", logicalFile)
+        .put("phyId", phyId)
+        .put("phyFilename", phyFilename)
+        .put("now", now)
+        .put("fileSize", fileSize)
+        .put("loId", loId)
+        .put("derivedFrom", derivedFrom)
+        .put("logicalFileName", logicalFileName)
+        .put("fileExtension", "nt")
+        .put("contentType", contentType).build();
 
     var queryStr = queryStore.getQueryWithParameters("writeTtlFile", queryParameters);
     sparqlClient.executeUpdateQuery(queryStr);

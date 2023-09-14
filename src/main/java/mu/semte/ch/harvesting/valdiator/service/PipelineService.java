@@ -25,18 +25,18 @@ public class PipelineService {
   private final ValidatingService validatingService;
 
   public PipelineService(TaskService taskService,
-                         FilteringService filteringService,
-                         ValidatingService validatingService) {
+      FilteringService filteringService,
+      ValidatingService validatingService) {
     this.taskService = taskService;
     this.filteringService = filteringService;
     this.validatingService = validatingService;
   }
 
-
   @Async
   public void runPipeline(String deltaEntry) {
 
-    if (!taskService.isTask(deltaEntry)) return;
+    if (!taskService.isTask(deltaEntry))
+      return;
     var task = taskService.loadTask(deltaEntry);
 
     if (task == null || StringUtils.isEmpty(task.getOperation())) {
@@ -56,16 +56,13 @@ public class PipelineService {
         consumer.accept(task);
         taskService.updateTaskStatus(task, STATUS_SUCCESS);
         log.debug("Done with success for task {}", task.getId());
-      }
-      catch (Throwable e) {
+      } catch (Throwable e) {
         log.error("Error:", e);
         taskService.updateTaskStatus(task, STATUS_FAILED);
-        taskService.appendTaskError(task, e.getMessage());
+        taskService.appendTaskError(task, StringUtils.abbreviate(e.getMessage(), 100));
       }
     }, () -> log.debug("unknown operation '{}' for delta entry {}", task.getOperation(), deltaEntry));
 
-
   }
-
 
 }
