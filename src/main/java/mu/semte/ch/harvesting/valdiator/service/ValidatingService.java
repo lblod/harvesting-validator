@@ -31,7 +31,8 @@ public class ValidatingService {
                                                                 inputContainer.getGraphUri());
 
                                 var fileContainer = DataContainer.builder().build();
-                                var validationGraphContainer = DataContainer.builder().build();
+                                var validationGraphContainer = DataContainer.builder()
+                                                                .graphUri(inputContainer.getGraphUri()).build();
                                 var resultContainer = DataContainer.builder()
                                                                 .graphUri(inputContainer.getGraphUri())
                                                                 .validationGraphUri(validationGraphContainer
