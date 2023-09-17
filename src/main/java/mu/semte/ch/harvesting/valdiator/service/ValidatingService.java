@@ -1,5 +1,6 @@
 package mu.semte.ch.harvesting.valdiator.service;
 
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.lib.dto.DataContainer;
 import mu.semte.ch.lib.dto.Task;
@@ -8,8 +9,6 @@ import mu.semte.ch.lib.utils.ModelUtils;
 import org.apache.jena.rdf.model.Model;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-
 @Service
 @Slf4j
 public class ValidatingService {
@@ -17,8 +16,7 @@ public class ValidatingService {
                 private final TaskService taskService;
                 private final XlsReportService xlsReportService;
 
-                public ValidatingService(ShaclService shaclService,
-                                                TaskService taskService,
+                public ValidatingService(ShaclService shaclService, TaskService taskService,
                                                 XlsReportService xlsReportService) {
                                 this.shaclService = shaclService;
                                 this.taskService = taskService;
@@ -31,12 +29,7 @@ public class ValidatingService {
                                                                 inputContainer.getGraphUri());
 
                                 var fileContainer = DataContainer.builder().build();
-                                var validationGraphContainer = DataContainer.builder()
-                                                                .graphUri(inputContainer.getGraphUri()).build();
-                                var resultContainer = DataContainer.builder()
-                                                                .graphUri(inputContainer.getGraphUri())
-                                                                .validationGraphUri(validationGraphContainer
-                                                                                                .getGraphUri())
+                                var resultContainer = DataContainer.builder().graphUri(inputContainer.getGraphUri())
                                                                 .build();
                                 for (var mbd : importedTriples) {
                                                 log.info("writing report for {}", mbd.derivedFrom());
@@ -44,20 +37,17 @@ public class ValidatingService {
                                                 var reportGraph = report.getKey().getGraphUri();
                                                 xlsReportService.writeReport(task, report.getValue(), fileContainer,
                                                                                 mbd.derivedFrom());
-                                                var dataContainer = DataContainer.builder()
-                                                                                .graphUri(reportGraph)
+                                                var dataContainer = DataContainer.builder().graphUri(reportGraph)
                                                                                 .build();
                                                 taskService.appendTaskResultFile(task, dataContainer);
 
-                                                taskService.appendTaskResultGraph(task, validationGraphContainer
-                                                                                .toBuilder()
-                                                                                .validationGraphUri(dataContainer
-                                                                                                                .getUri())
-                                                                                .build());
-
+                                                taskService.appendTaskResultGraph(
+                                                                                task,
+                                                                                resultContainer.toBuilder().validationGraphUri(
+                                                                                                                reportGraph)
+                                                                                                                .build());
                                 }
                                 taskService.appendTaskResultGraph(task, resultContainer);
-
                 }
 
                 private Map.Entry<DataContainer, Model> writeValidationReport(Task task, DataContainer fileContainer,
@@ -67,7 +57,8 @@ public class ValidatingService {
                                 log.debug("triples conforms: {}", report.conforms());
                                 var reportModel = ModelUtils.replaceAnonNodes(report.getModel());
                                 var dataContainer = fileContainer.toBuilder()
-                                                                .graphUri(taskService.writeTtlFile(task.getGraph(),
+                                                                .graphUri(taskService.writeTtlFile(
+                                                                                                task.getGraph(),
                                                                                                 new ModelByDerived(importedTriples
                                                                                                                                 .derivedFrom(),
                                                                                                                                 reportModel),
@@ -76,5 +67,4 @@ public class ValidatingService {
                                 taskService.appendTaskResultFile(task, dataContainer);
                                 return Map.entry(dataContainer, reportModel);
                 }
-
 }
