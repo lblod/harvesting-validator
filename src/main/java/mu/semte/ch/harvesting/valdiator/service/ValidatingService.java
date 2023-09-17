@@ -29,25 +29,21 @@ public class ValidatingService {
                                                                 inputContainer.getGraphUri());
 
                                 var fileContainer = DataContainer.builder().build();
-                                var resultContainer = DataContainer.builder().graphUri(inputContainer.getGraphUri())
+                                var resultContainer = DataContainer.builder()
+                                                                .graphUri(inputContainer.getGraphUri())
+                                                                .validationGraphUri(fileContainer.getUri())
                                                                 .build();
                                 for (var mbd : importedTriples) {
                                                 log.info("writing report for {}", mbd.derivedFrom());
                                                 var report = writeValidationReport(task, fileContainer, mbd);
                                                 var reportGraph = report.getKey().getGraphUri();
-                                                xlsReportService.writeReport(task, report.getValue(), fileContainer,
-                                                                                mbd.derivedFrom());
+                                                // xlsReportService.writeReport(task, report.getValue(), fileContainer,
+                                                // mbd.derivedFrom());
                                                 var dataContainer = DataContainer.builder().graphUri(reportGraph)
                                                                                 .build();
                                                 taskService.appendTaskResultFile(task, dataContainer);
-
-                                                taskService.appendTaskResultGraph(
-                                                                                task,
-                                                                                resultContainer.toBuilder().validationGraphUri(
-                                                                                                                reportGraph)
-                                                                                                                .build());
                                 }
-                                // taskService.appendTaskResultGraph(task, resultContainer);
+                                taskService.appendTaskResultGraph(task, resultContainer);
                 }
 
                 private Map.Entry<DataContainer, Model> writeValidationReport(Task task, DataContainer fileContainer,
