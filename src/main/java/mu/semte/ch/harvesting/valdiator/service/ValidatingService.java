@@ -47,7 +47,7 @@ public class ValidatingService {
                                                                                                                 reportGraph)
                                                                                                                 .build());
                                 }
-                                taskService.appendTaskResultGraph(task, resultContainer);
+                                // taskService.appendTaskResultGraph(task, resultContainer);
                 }
 
                 private Map.Entry<DataContainer, Model> writeValidationReport(Task task, DataContainer fileContainer,
