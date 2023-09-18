@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class ValidatingService {
                 private final ShaclService shaclService;
                 private final TaskService taskService;
+                @SuppressWarnings("unused")
                 private final XlsReportService xlsReportService;
 
                 public ValidatingService(ShaclService shaclService, TaskService taskService,
