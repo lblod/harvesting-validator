@@ -41,7 +41,8 @@ public class FilteringService {
                                         validTriples.getValue(), mdb.derivedFrom());
                         var dataContainer = DataContainer.builder().graphUri(filteredGraph).build();
                         taskService.appendTaskResultFile(task, dataContainer);
-                        taskService.appendTaskResultFile(task, graphContainer);
+                        taskService.appendTaskResultFile(
+                                        task, graphContainer.toBuilder().graphUri(filteredGraph).build());
                         // append result graph
                         // graphContainer =
                         // graphContainer.toBuilder().graphUri(dataContainer.getUri()).build();
