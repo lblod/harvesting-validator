@@ -7,6 +7,7 @@ import mu.semte.ch.lib.dto.Task;
 import mu.semte.ch.lib.shacl.ShaclService;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.shacl.ValidationReport;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,6 +16,8 @@ public class FilteringService {
 
         private final ShaclService shaclService;
         private final TaskService taskService;
+        @Value("${sparql.defaultLimitSize}")
+        private int defaultLimitSize;
 
         public FilteringService(ShaclService shaclService, TaskService taskService) {
                 this.shaclService = shaclService;
@@ -24,29 +27,40 @@ public class FilteringService {
         public void runFilterPipeline(Task task) {
                 var inputContainer = taskService.selectInputContainer(task).get(0);
                 log.debug("input container: {}", inputContainer);
-                var importedTriples = taskService.fetchTripleFromFileInputContainer(
+                var countTriples = taskService.countTriplesFromFileInputContainer(
                                 inputContainer.getGraphUri());
+                var pagesCount = countTriples > defaultLimitSize
+                                ? countTriples / defaultLimitSize
+                                : defaultLimitSize;
+
                 var fileContainer = DataContainer.builder().build();
                 var graphContainer = DataContainer.builder().build();
                 var resultContainer = DataContainer.builder().graphUri(graphContainer.getUri()).build();
-                for (var mdb : importedTriples) {
-                        var report = taskService.fetchValidationGraphByDerivedFrom(
-                                        inputContainer.getValidationGraphUri(), mdb.derivedFrom());
 
-                        var validTriples = writeValidTriples(task, fileContainer,
-                                        ShaclService.fromModel(report), mdb);
+                for (var i = 0; i <= pagesCount; i++) {
+                        var offset = i * defaultLimitSize;
+                        var importedTriples = taskService.fetchTripleFromFileInputContainer(
+                                        inputContainer.getGraphUri(), defaultLimitSize, offset);
+                        for (var mdb : importedTriples) {
+                                var report = taskService.fetchValidationGraphByDerivedFrom(
+                                                inputContainer.getValidationGraphUri(), mdb.derivedFrom());
 
-                        var filteredGraph = validTriples.getKey().getGraphUri();
-                        writeErrorTriples(task, fileContainer, mdb.model(),
-                                        validTriples.getValue(), mdb.derivedFrom());
-                        var dataContainer = DataContainer.builder().graphUri(filteredGraph).build();
-                        taskService.appendTaskResultFile(task, dataContainer);
-                        taskService.appendTaskResultFile(
-                                        task, graphContainer.toBuilder().graphUri(filteredGraph).build());
-                        // append result graph
-                        // graphContainer =
-                        // graphContainer.toBuilder().graphUri(dataContainer.getUri()).build();
+                                var validTriples = writeValidTriples(
+                                                task, fileContainer, ShaclService.fromModel(report), mdb);
+
+                                var filteredGraph = validTriples.getKey().getGraphUri();
+                                writeErrorTriples(task, fileContainer, mdb.model(),
+                                                validTriples.getValue(), mdb.derivedFrom());
+                                var dataContainer = DataContainer.builder().graphUri(filteredGraph).build();
+                                taskService.appendTaskResultFile(task, dataContainer);
+                                taskService.appendTaskResultFile(
+                                                task, graphContainer.toBuilder().graphUri(filteredGraph).build());
+                                // append result graph
+                                // graphContainer =
+                                // graphContainer.toBuilder().graphUri(dataContainer.getUri()).build();
+                        }
                 }
+
                 taskService.appendTaskResultGraph(task, resultContainer);
         }
 

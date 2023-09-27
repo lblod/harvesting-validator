@@ -7,6 +7,7 @@ import mu.semte.ch.lib.dto.Task;
 import mu.semte.ch.lib.shacl.ShaclService;
 import mu.semte.ch.lib.utils.ModelUtils;
 import org.apache.jena.rdf.model.Model;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,6 +17,8 @@ public class ValidatingService {
                 private final TaskService taskService;
                 @SuppressWarnings("unused")
                 private final XlsReportService xlsReportService;
+                @Value("${sparql.defaultLimitSize}")
+                private int defaultLimitSize;
 
                 public ValidatingService(ShaclService shaclService, TaskService taskService,
                                                 XlsReportService xlsReportService) {
@@ -26,24 +29,38 @@ public class ValidatingService {
 
                 public void runValidatePipeline(Task task) {
                                 var inputContainer = taskService.selectInputContainer(task).get(0);
-                                var importedTriples = taskService.fetchTripleFromFileInputContainer(
+                                var countTriples = taskService.countTriplesFromFileInputContainer(
                                                                 inputContainer.getGraphUri());
+                                var pagesCount = countTriples > defaultLimitSize
+                                                                ? countTriples / defaultLimitSize
+                                                                : defaultLimitSize;
 
                                 var fileContainer = DataContainer.builder().build();
                                 var resultContainer = DataContainer.builder()
                                                                 .graphUri(inputContainer.getGraphUri())
                                                                 .validationGraphUri(fileContainer.getUri())
                                                                 .build();
-                                for (var mbd : importedTriples) {
-                                                log.info("writing report for {}", mbd.derivedFrom());
-                                                var report = writeValidationReport(task, fileContainer, mbd);
-                                                var reportGraph = report.getKey().getGraphUri();
-                                                // xlsReportService.writeReport(task, report.getValue(), fileContainer,
-                                                // mbd.derivedFrom());
-                                                var dataContainer = DataContainer.builder().graphUri(reportGraph)
-                                                                                .build();
-                                                taskService.appendTaskResultFile(task, dataContainer);
+
+                                for (var i = 0; i <= pagesCount; i++) {
+                                                var offset = i * defaultLimitSize;
+                                                var importedTriples = taskService.fetchTripleFromFileInputContainer(
+                                                                                inputContainer.getGraphUri(),
+                                                                                defaultLimitSize, offset);
+                                                for (var mbd : importedTriples) {
+                                                                log.info("writing report for {}", mbd.derivedFrom());
+                                                                var report = writeValidationReport(task, fileContainer,
+                                                                                                mbd);
+                                                                var reportGraph = report.getKey().getGraphUri();
+                                                                // xlsReportService.writeReport(task, report.getValue(),
+                                                                // fileContainer,
+                                                                // mbd.derivedFrom());
+                                                                var dataContainer = DataContainer.builder()
+                                                                                                .graphUri(reportGraph)
+                                                                                                .build();
+                                                                taskService.appendTaskResultFile(task, dataContainer);
+                                                }
                                 }
+
                                 taskService.appendTaskResultGraph(task, resultContainer);
                 }
 
