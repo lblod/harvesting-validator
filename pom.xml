@@ -51,7 +51,7 @@
     <poi.version>5.0.0</poi.version>
     <mu-java.version>1.0.26</mu-java.version>
     <log4j2.version>2.17.2</log4j2.version>
-    <lombok.version>1.18.28</lombok.version>
+    <lombok.version>1.18.30</lombok.version>
   </properties>
   <scm>
     <connection>
