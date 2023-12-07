@@ -17,4 +17,4 @@ WORKDIR /app
 
 COPY --from=builder /app/target/harvesting-validator.jar ./app.jar
 ENV JAVA_OPTS=""
-ENTRYPOINT ["java", "-XX:+CompactStrings", "${JAVA_OPTS}","-jar", "/app/app.jar"]
+ENTRYPOINT ["java ${JAVA_OPTS}", "-XX:+CompactStrings", ,"-jar", "/app/app.jar"]
