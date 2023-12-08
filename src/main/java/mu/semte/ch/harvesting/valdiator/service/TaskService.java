@@ -3,11 +3,9 @@ package mu.semte.ch.harvesting.valdiator.service;
 import static java.util.Optional.ofNullable;
 import static mu.semte.ch.harvesting.valdiator.Constants.ERROR_URI_PREFIX;
 import static mu.semte.ch.harvesting.valdiator.Constants.LOGICAL_FILE_PREFIX;
-import static mu.semte.ch.harvesting.valdiator.Constants.STATUS_FAILED;
 import static mu.semte.ch.lib.utils.ModelUtils.*;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -46,6 +44,8 @@ public class TaskService {
   private int defaultLimitSize;
   @Value("${sparql.maxRetry}")
   private int maxRetry;
+  @Value("${sparql.highLoadSparqlEndpoint}")
+  private String highLoadSparqlEndpoint;
 
   public TaskService(SparqlQueryStore queryStore, SparqlClient sparqlClient) {
     this.queryStore = queryStore;
@@ -55,7 +55,7 @@ public class TaskService {
   public boolean isTask(String subject) {
     String queryStr = queryStore.getQuery("isTask").formatted(subject);
 
-    return sparqlClient.executeAskQuery(queryStr);
+    return sparqlClient.executeAskQuery(queryStr, highLoadSparqlEndpoint, true);
   }
 
   public Task loadTask(String deltaEntry) {
@@ -82,7 +82,7 @@ public class TaskService {
           .build();
       log.debug("task: {}", task);
       return task;
-    });
+    }, highLoadSparqlEndpoint, true);
   }
 
   @Deprecated
@@ -94,7 +94,7 @@ public class TaskService {
         return 0;
       }
       return resultSet.next().getLiteral("count").getInt();
-    });
+    }, highLoadSparqlEndpoint, true);
     var pagesCount = countTriples > defaultLimitSize
         ? countTriples / defaultLimitSize
         : defaultLimitSize;
@@ -106,7 +106,8 @@ public class TaskService {
               Map.of("graphUri", graphImportedTriples, "limitSize",
                   defaultLimitSize, "offsetNumber",
                   page * defaultLimitSize));
-          return sparqlClient.executeSelectQuery(query);
+          return sparqlClient.executeSelectQuery(query, highLoadSparqlEndpoint,
+              true);
         })
         .reduce(ModelFactory.createDefaultModel(), Model::add);
   }
@@ -127,7 +128,7 @@ public class TaskService {
       var qs = resultSet.next();
 
       return qs.getResource("path").getURI();
-    });
+    }, highLoadSparqlEndpoint, true);
     if (path == null) {
       throw new RuntimeException("%s and derived from %s not found".formatted(
           containerUri, derivedFrom));
@@ -151,7 +152,7 @@ public class TaskService {
         return 0;
       }
       return resultSet.next().getLiteral("count").getInt();
-    });
+    }, highLoadSparqlEndpoint, true);
   }
 
   @SneakyThrows
@@ -174,7 +175,7 @@ public class TaskService {
       }
 
       return byDerived;
-    });
+    }, highLoadSparqlEndpoint, true);
 
     if (pathsByDerived == null) {
       log.error(" files '{}' not found", fileContainerUri);
@@ -205,45 +206,6 @@ public class TaskService {
         .formatted(status, formattedDate(LocalDateTime.now()),
             task.getTask());
     sparqlClient.executeUpdateQuery(queryUpdate);
-  }
-
-  public void importTriples(Task task, String graph, Model model) {
-    log.debug(
-        "running import triples with batch size {}, model size: {}, graph: <{}>",
-        defaultBatchSize, model.size(), graph);
-    List<Triple> triples = model.getGraph().find().toList(); // duplicate so we can splice
-    Lists.partition(triples, defaultBatchSize)
-        .stream()
-        .parallel()
-        .map(batch -> {
-          Model batchModel = ModelFactory.createDefaultModel();
-          Graph batchGraph = batchModel.getGraph();
-          batch.forEach(batchGraph::add);
-          return batchModel;
-        })
-        .forEach(
-            batchModel -> this.insertModelOrRetry(task, graph, batchModel));
-  }
-
-  private void insertModelOrRetry(Task task, String graph, Model batchModel) {
-    int retryCount = 0;
-    boolean success = false;
-    do {
-      try {
-        sparqlClient.insertModel(graph, batchModel);
-        success = true;
-        break;
-      } catch (Exception e) {
-        log.error("an error occurred, retry count {}, max retry {}, error: {}",
-            retryCount, maxRetry, e);
-        retryCount += 1;
-      }
-    } while (retryCount < maxRetry);
-    if (!success) {
-      this.appendTaskError(
-          task, "Reaching max retries. Check the logs for further details.");
-      this.updateTaskStatus(task, STATUS_FAILED);
-    }
   }
 
   @SneakyThrows
@@ -277,7 +239,7 @@ public class TaskService {
         .build();
 
     var queryStr = queryStore.getQueryWithParameters("writeTtlFile", queryParameters);
-    sparqlClient.executeUpdateQuery(queryStr);
+    sparqlClient.executeUpdateQuery(queryStr, highLoadSparqlEndpoint, true);
     return logicalFile;
   }
 
@@ -290,7 +252,7 @@ public class TaskService {
     var queryStr = queryStore.getQueryWithParameters("appendTaskResultFile",
         queryParameters);
 
-    sparqlClient.executeUpdateQuery(queryStr);
+    sparqlClient.executeUpdateQuery(queryStr, highLoadSparqlEndpoint, true);
   }
 
   public void appendTaskResultGraph(Task task, DataContainer dataContainer) {
@@ -298,7 +260,7 @@ public class TaskService {
     var queryStr = queryStore.getQueryWithParameters("appendTaskResultGraph",
         queryParameters);
     log.debug(queryStr);
-    sparqlClient.executeUpdateQuery(queryStr);
+    sparqlClient.executeUpdateQuery(queryStr, highLoadSparqlEndpoint, true);
   }
 
   public List<DataContainer> selectInputContainer(Task task) {
