@@ -176,7 +176,7 @@ public class TaskService {
     }, highLoadSparqlEndpoint, true);
 
     if (pathsByDerived == null) {
-      log.error(" files '{}' not found", fileContainerUri);
+      log.error(" files '{}' not found, query: \n {}", fileContainerUri, query);
       throw new RuntimeException(
           "paths for file container '%s' is empty or file/derivedFrom not found"
               .formatted(fileContainerUri));
