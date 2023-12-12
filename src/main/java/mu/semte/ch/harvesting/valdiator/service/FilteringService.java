@@ -29,9 +29,7 @@ public class FilteringService {
                 log.debug("input container: {}", inputContainer);
                 var countTriples = taskService.countTriplesFromFileInputContainer(
                                 inputContainer.getGraphUri());
-                var pagesCount = countTriples > defaultLimitSize
-                                ? countTriples / defaultLimitSize
-                                : defaultLimitSize;
+                var pagesCount = countTriples > defaultLimitSize ? countTriples / defaultLimitSize : 1;
 
                 var fileContainer = DataContainer.builder().build();
                 var graphContainer = DataContainer.builder().build();

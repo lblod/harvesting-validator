@@ -31,9 +31,7 @@ public class ValidatingService {
                                 var inputContainer = taskService.selectInputContainer(task).get(0);
                                 var countTriples = taskService.countTriplesFromFileInputContainer(
                                                                 inputContainer.getGraphUri());
-                                var pagesCount = countTriples > defaultLimitSize
-                                                                ? countTriples / defaultLimitSize
-                                                                : defaultLimitSize;
+                                var pagesCount = countTriples > defaultLimitSize ? countTriples / defaultLimitSize : 1;
 
                                 var fileContainer = DataContainer.builder().build();
                                 var resultContainer = DataContainer.builder()
