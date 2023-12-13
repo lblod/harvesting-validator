@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.lib.dto.DataContainer;
 import mu.semte.ch.lib.dto.Task;
 import mu.semte.ch.lib.shacl.ShaclService;
+import mu.semte.ch.lib.utils.ModelUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.shacl.ValidationReport;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,12 +48,14 @@ public class FilteringService {
                                 log.info("generate validation reports...");
                                 var report = shaclService.validate(mdb.model().getGraph());
                                 log.info("triples conforms: {}", report.conforms());
+                                var reportModel = ModelUtils.replaceAnonNodes(report.getModel());
 
                                 var validTriples = writeValidTriples(task, fileContainer, report, mdb);
 
                                 var filteredGraph = validTriples.getKey().getGraphUri();
                                 writeErrorTriples(task, fileContainer, mdb.model(),
                                                 validTriples.getValue(), mdb.derivedFrom());
+                                writeReport(task, fileContainer, reportModel, mdb.derivedFrom());
                                 // var dataContainer =
                                 // DataContainer.builder().graphUri(filteredGraph).build();
                                 // taskService.appendTaskResultFile(task, dataContainer);
@@ -76,6 +79,17 @@ public class FilteringService {
                                 .graphUri(taskService.writeTtlFile(
                                                 task.getGraph(), new ModelByDerived(derivedFrom, errorTriples),
                                                 "error-triples.ttl"))
+
+                                .build();
+                taskService.appendTaskResultFile(task, dataContainer);
+        }
+
+        private void writeReport(Task task, DataContainer fileContainer, Model report,
+                        String derivedFrom) {
+                var dataContainer = fileContainer.toBuilder()
+                                .graphUri(taskService.writeTtlFile(
+                                                task.getGraph(), new ModelByDerived(derivedFrom, report),
+                                                "validation-report.ttl"))
 
                                 .build();
                 taskService.appendTaskResultFile(task, dataContainer);

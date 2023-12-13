@@ -8,7 +8,7 @@ import mu.semte.ch.lib.shacl.ShaclService;
 import mu.semte.ch.lib.utils.ModelUtils;
 import org.apache.jena.rdf.model.Model;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+// import org.springframework.stereotype.Service;
 
 //@Service
 @Slf4j
