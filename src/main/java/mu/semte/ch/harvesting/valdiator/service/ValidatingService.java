@@ -46,16 +46,16 @@ public class ValidatingService {
                                                                                 defaultLimitSize, offset);
                                                 for (var mbd : importedTriples) {
                                                                 log.info("writing report for {}", mbd.derivedFrom());
-                                                                var report = writeValidationReport(task, fileContainer,
-                                                                                                mbd);
-                                                                var reportGraph = report.getKey().getGraphUri();
+                                                                writeValidationReport(task, fileContainer, mbd);
+                                                                // var _reportGraph = report.getKey().getGraphUri();
                                                                 // xlsReportService.writeReport(task, report.getValue(),
                                                                 // fileContainer,
                                                                 // mbd.derivedFrom());
-                                                                var dataContainer = DataContainer.builder()
-                                                                                                .graphUri(reportGraph)
-                                                                                                .build();
-                                                                taskService.appendTaskResultFile(task, dataContainer);
+                                                                // var dataContainer = DataContainer.builder()
+                                                                // .graphUri(reportGraph)
+                                                                // .build();
+                                                                // taskService.appendTaskResultFile(task,
+                                                                // dataContainer);
                                                 }
                                 }
 
