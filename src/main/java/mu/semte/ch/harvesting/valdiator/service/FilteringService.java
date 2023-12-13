@@ -40,11 +40,15 @@ public class FilteringService {
                         var importedTriples = taskService.fetchTripleFromFileInputContainer(
                                         inputContainer.getGraphUri(), defaultLimitSize, offset);
                         for (var mdb : importedTriples) {
-                                var report = taskService.fetchValidationGraphByDerivedFrom(
-                                                inputContainer.getValidationGraphUri(), mdb.derivedFrom());
+                                // var report = taskService.fetchValidationGraphByDerivedFrom(
+                                // inputContainer.getValidationGraphUri(),
+                                // mdb.derivedFrom());
 
-                                var validTriples = writeValidTriples(
-                                                task, fileContainer, ShaclService.fromModel(report), mdb);
+                                log.info("generate validation reports...");
+                                var report = shaclService.validate(mdb.model().getGraph());
+                                log.info("triples conforms: {}", report.conforms());
+
+                                var validTriples = writeValidTriples(task, fileContainer, report, mdb);
 
                                 var filteredGraph = validTriples.getKey().getGraphUri();
                                 writeErrorTriples(task, fileContainer, mdb.model(),

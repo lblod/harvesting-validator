@@ -10,8 +10,9 @@ import org.apache.jena.rdf.model.Model;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-@Service
+//@Service
 @Slf4j
+@Deprecated
 public class ValidatingService {
                 private final ShaclService shaclService;
                 private final TaskService taskService;
