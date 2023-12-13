@@ -49,8 +49,9 @@ public class FilteringService {
                                 var filteredGraph = validTriples.getKey().getGraphUri();
                                 writeErrorTriples(task, fileContainer, mdb.model(),
                                                 validTriples.getValue(), mdb.derivedFrom());
-                                var dataContainer = DataContainer.builder().graphUri(filteredGraph).build();
-                                taskService.appendTaskResultFile(task, dataContainer);
+                                // var dataContainer =
+                                // DataContainer.builder().graphUri(filteredGraph).build();
+                                // taskService.appendTaskResultFile(task, dataContainer);
                                 taskService.appendTaskResultFile(
                                                 task, graphContainer.toBuilder().graphUri(filteredGraph).build());
                                 // append result graph
