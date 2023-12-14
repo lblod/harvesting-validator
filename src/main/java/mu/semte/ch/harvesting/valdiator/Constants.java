@@ -1,7 +1,6 @@
 package mu.semte.ch.harvesting.valdiator;
 
 public interface Constants {
-  String TASK_HARVESTING_VALIDATING = "http://lblod.data.gift/id/jobs/concept/TaskOperation/validating";
   String TASK_HARVESTING_FILTERING = "http://lblod.data.gift/id/jobs/concept/TaskOperation/filtering";
 
   String SUBJECT_STATUS = "http://www.w3.org/ns/adms#status";

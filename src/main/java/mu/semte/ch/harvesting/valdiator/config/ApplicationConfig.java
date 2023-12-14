@@ -1,6 +1,5 @@
 package mu.semte.ch.harvesting.valdiator.config;
 
-import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.lib.config.CoreConfig;
 import mu.semte.ch.lib.shacl.ShaclService;
 import org.apache.jena.graph.Graph;
@@ -20,7 +19,6 @@ import static mu.semte.ch.lib.utils.ModelUtils.toModel;
 
 @Configuration
 @Import(CoreConfig.class)
-@Slf4j
 public class ApplicationConfig {
   @Value("${shacl.application-profile.default}")
   private Resource applicationProfile;
@@ -30,13 +28,14 @@ public class ApplicationConfig {
   @Bean
   public Shapes defaultApplicationProfile() throws IOException {
     Graph shapesGraph = toModel(applicationProfile.getInputStream(),
-                                filenameToLang(applicationProfile.getFilename(), Lang.TURTLE)).getGraph();
+        filenameToLang(applicationProfile.getFilename(), Lang.TURTLE)).getGraph();
     return Shapes.parse(shapesGraph);
 
   }
+
   @Bean
   public ShaclService shaclService(@Autowired Shapes defaultApplicationProfile) throws IOException {
-    return new ShaclService(defaultApplicationProfile,strictModeFiltering);
+    return new ShaclService(defaultApplicationProfile, strictModeFiltering);
 
   }
 

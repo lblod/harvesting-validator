@@ -1,0 +1,13 @@
+PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX dbpedia: <http://dbpedia.org/ontology/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
+select ?path where  {
+<${source}> <http://redpencil.data.gift/vocabularies/tasks/hasFile> ?file.
+?path <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#dataSource> ?file.
+?file <http://www.w3.org/ns/prov#wasDerivedFrom> <${derivedFrom}>.
+}
