@@ -1,9 +1,17 @@
 # [HARVESTING-SELF-SERVICE]: Validation Task
+
+## !IMPORTANT
+
+Version 0.2.x and onward introduces the split files feature (each downloaded pages is treated as a separate model),
+major breaking changes with 0.1.x are expected.
+
+If you don't use the latest version of the harvester (master branch), please do not upgrade.
+
 Validate and filter based on a single shacl application profile.
 
 - React to delta
 - Validate the graph fetched from the input container
-- Filter the errored triples 
+- Filter the errored triples
 - Generate a https://www.w3.org/ns/shacl#ValidationReport
 
 ## Setup using docker-compose
@@ -11,6 +19,7 @@ Validate and filter based on a single shacl application profile.
 - Create a new directory `./config/validation`
 - Add your Shacl profile `./config/validation/application-profile.ttl`
 - Add the service to your docker-compose:
+
 ```
   validation:
     image: lblod/app-poc-harvesting-filtering-service
@@ -46,7 +55,6 @@ Validate and filter based on a single shacl application profile.
   }
 ```
 
-
 ## Environment variables
 
 - `SERVER_PORT` : default set to `80`
@@ -75,7 +83,7 @@ you can use the dummy docker-compose stack provided for this purpose.
 - check the triplestore at `http://localhost:8891/sparql`
 
 `POST localhost/delta`
-  
+
 ```
 [
   {
@@ -97,7 +105,7 @@ you can use the dummy docker-compose stack provided for this purpose.
           "datatype":""
         }
       }
-      
+
       ],
     "deletes": []
   }
