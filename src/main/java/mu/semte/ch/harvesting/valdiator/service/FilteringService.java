@@ -1,6 +1,8 @@
 package mu.semte.ch.harvesting.valdiator.service;
 
+import java.util.ArrayList;
 import java.util.Map;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.lib.dto.DataContainer;
 import mu.semte.ch.lib.dto.Task;
@@ -25,6 +27,7 @@ public class FilteringService {
                 this.taskService = taskService;
         }
 
+        @SneakyThrows
         public void runFilterPipeline(Task task) {
                 var inputContainer = taskService.selectInputContainer(task).get(0);
                 log.debug("input container: {}", inputContainer);
@@ -37,33 +40,37 @@ public class FilteringService {
                 var resultContainer = DataContainer.builder().graphUri(graphContainer.getUri()).build();
 
                 for (var i = 0; i <= pagesCount; i++) {
+                        var threads = new ArrayList<Thread>();
                         var offset = i * defaultLimitSize;
                         var importedTriples = taskService.fetchTripleFromFileInputContainer(
                                         inputContainer.getGraphUri(), defaultLimitSize, offset);
                         for (var mdb : importedTriples) {
-                                // var report = taskService.fetchValidationGraphByDerivedFrom(
-                                // inputContainer.getValidationGraphUri(),
-                                // mdb.derivedFrom());
+                                threads.add(Thread.startVirtualThread(() -> {
+                                        // var report = taskService.fetchValidationGraphByDerivedFrom(
+                                        // inputContainer.getValidationGraphUri(),
+                                        // mdb.derivedFrom());
 
-                                log.info("generate validation reports...");
-                                var report = shaclService.validate(mdb.model().getGraph());
-                                log.info("triples conforms: {}", report.conforms());
-                                var reportModel = ModelUtils.replaceAnonNodes(report.getModel());
+                                        log.info("generate validation reports...");
+                                        var report = shaclService.validate(mdb.model().getGraph());
+                                        log.info("triples conforms: {}", report.conforms());
 
-                                var validTriples = writeValidTriples(task, fileContainer, report, mdb);
+                                        var validTriples = writeValidTriples(task, fileContainer, report, mdb);
 
-                                var filteredGraph = validTriples.getKey().getGraphUri();
-                                writeErrorTriples(task, fileContainer, mdb.model(),
-                                                validTriples.getValue(), mdb.derivedFrom());
-                                writeReport(task, fileContainer, reportModel, mdb.derivedFrom());
-                                // var dataContainer =
-                                // DataContainer.builder().graphUri(filteredGraph).build();
-                                // taskService.appendTaskResultFile(task, dataContainer);
-                                taskService.appendTaskResultFile(
-                                                task, graphContainer.toBuilder().graphUri(filteredGraph).build());
-                                // append result graph
-                                // graphContainer =
-                                // graphContainer.toBuilder().graphUri(dataContainer.getUri()).build();
+                                        var filteredGraph = validTriples.getKey().getGraphUri();
+
+                                        taskService.appendTaskResultFile(
+                                                        task,
+                                                        graphContainer.toBuilder().graphUri(filteredGraph).build());
+                                        if (!report.conforms()) {
+                                                var reportModel = ModelUtils.replaceAnonNodes(report.getModel());
+                                                writeReport(task, fileContainer, reportModel, mdb.derivedFrom());
+                                                writeErrorTriples(task, fileContainer, mdb.model(),
+                                                                validTriples.getValue(), mdb.derivedFrom());
+                                        }
+                                }));
+                        }
+                        for (var thread : threads) {
+                                thread.join();
                         }
                 }
 
