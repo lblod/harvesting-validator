@@ -1,6 +1,18 @@
 package mu.semte.ch.harvesting.valdiator.service;
 
+import static java.util.Optional.ofNullable;
+import static mu.semte.ch.harvesting.valdiator.Constants.LOGICAL_FILE_PREFIX;
+import static mu.semte.ch.lib.utils.ModelUtils.formattedDate;
+import static mu.semte.ch.lib.utils.ModelUtils.uuid;
+import static org.apache.jena.shacl.engine.ShaclPaths.pathNode;
+
 import com.google.common.collect.ImmutableMap;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.time.LocalDateTime;
+import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.lib.dto.DataContainer;
@@ -24,22 +36,12 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.time.LocalDateTime;
-import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-
-import static java.util.Optional.ofNullable;
-import static mu.semte.ch.harvesting.valdiator.Constants.LOGICAL_FILE_PREFIX;
-import static mu.semte.ch.lib.utils.ModelUtils.formattedDate;
-import static mu.semte.ch.lib.utils.ModelUtils.uuid;
-import static org.apache.jena.shacl.engine.ShaclPaths.pathNode;
-
-@Service
+/**
+ * disabled after split file has been implemented, as it was non critical
+ * if that feature is still used by someone else, may enable it again
+ */
+// @Service
 @Slf4j
 public class XlsReportService {
   private final SparqlQueryStore queryStore;
@@ -56,7 +58,8 @@ public class XlsReportService {
     this.taskService = taskService;
   }
 
-  public void writeReport(Task task, Model report, DataContainer fileContainer, String derivedFrom) {
+  public void writeReport(Task task, Model report, DataContainer fileContainer,
+      String derivedFrom) {
     ValidationReport validationReport = ShaclService.fromModel(report);
 
     if (validationReport.conforms()) {
@@ -66,9 +69,8 @@ public class XlsReportService {
 
     Workbook workbook = new XSSFWorkbook();
 
-    var groupedByPath = validationReport.getEntries()
-        .stream()
-        .collect(Collectors.groupingBy(reportEntry -> pathNode(reportEntry.resultPath()).getLocalName()));
+    var groupedByPath = validationReport.getEntries().stream().collect(Collectors.groupingBy(
+        reportEntry -> pathNode(reportEntry.resultPath()).getLocalName()));
 
     Sheet sheet = workbook.createSheet("Statistics");
 
@@ -103,17 +105,15 @@ public class XlsReportService {
             .map(ShLib::displayStr)
             .map(this::abbreviate)
             .orElse(""));
-        detailRow.createCell(2).setCellValue(ofNullable(reportEntry.message())
-            .map(this::abbreviate)
-            .orElse(""));
-        detailRow.createCell(3).setCellValue(ofNullable(reportEntry.resultPath())
-            .map(ShaclPaths::pathNode)
-            .map(ShLib::displayStr)
-            .map(this::abbreviate)
-            .orElse(""));
-
+        detailRow.createCell(2).setCellValue(
+            ofNullable(reportEntry.message()).map(this::abbreviate).orElse(""));
+        detailRow.createCell(3).setCellValue(
+            ofNullable(reportEntry.resultPath())
+                .map(ShaclPaths::pathNode)
+                .map(ShLib::displayStr)
+                .map(this::abbreviate)
+                .orElse(""));
       }
-
     });
     Row row = sheet.createRow(counter.getAndAdd(1));
     CellStyle cellStyle = workbook.createCellStyle();
@@ -153,7 +153,8 @@ public class XlsReportService {
   }
 
   @SneakyThrows
-  private String writeFile(String graph, Workbook workbook, String derivedFrom) {
+  private String writeFile(String graph, Workbook workbook,
+      String derivedFrom) {
     var fileExtension = "xlsx";
     var logicalFileName = "report-statistics." + fileExtension;
     var contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -181,7 +182,8 @@ public class XlsReportService {
         .put("derivedFrom", derivedFrom)
         .put("logicalFileName", logicalFileName)
         .put("fileExtension", "nt")
-        .put("contentType", contentType).build();
+        .put("contentType", contentType)
+        .build();
 
     var queryStr = queryStore.getQueryWithParameters("writeTtlFile", queryParameters);
     sparqlClient.executeUpdateQuery(queryStr);
