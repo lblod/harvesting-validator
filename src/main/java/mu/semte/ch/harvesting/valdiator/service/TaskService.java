@@ -183,11 +183,13 @@ public class TaskService {
       var file = new File(shareFolderPath, path);
       if (!file.exists()) {
         log.warn("file {} doesn't exist", path);
+      } else {
+        var modelByDerived = new ModelByDerived(
+            pbd.derivedFrom,
+            ModelUtils.toModel(FileUtils.openInputStream(file), Lang.TURTLE));
+        modelsByDerived.add(modelByDerived);
       }
-      var modelByDerived = new ModelByDerived(
-          pbd.derivedFrom,
-          ModelUtils.toModel(FileUtils.openInputStream(file), Lang.TURTLE));
-      modelsByDerived.add(modelByDerived);
+
     }
     return modelsByDerived;
   }
