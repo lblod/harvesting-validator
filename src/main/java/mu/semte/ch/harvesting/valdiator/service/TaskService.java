@@ -182,7 +182,7 @@ public class TaskService {
       var path = pbd.path.replace("share://", "");
       var file = new File(shareFolderPath, path);
       if (!file.exists()) {
-        throw new RuntimeException("file %s doesn't exist".formatted(path));
+        log.warn("file %s doesn't exist".formatted(path));
       }
       var modelByDerived = new ModelByDerived(
           pbd.derivedFrom,
