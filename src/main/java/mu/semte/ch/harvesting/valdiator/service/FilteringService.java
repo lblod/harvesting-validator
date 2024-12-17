@@ -39,6 +39,7 @@ public class FilteringService {
                 var graphContainer = DataContainer.builder().build();
                 var resultContainer = DataContainer.builder().graphUri(graphContainer.getUri()).build();
 
+                var sleepMs = 100;
                 for (var i = 0; i <= pagesCount; i++) {
                         var threads = new ArrayList<Thread>();
                         var offset = i * defaultLimitSize;
@@ -68,6 +69,12 @@ public class FilteringService {
                                                                 validTriples.getValue(), mdb.derivedFrom());
                                         }
                                 }));
+                                try {
+                                        log.info("sleep for {} ms to let virtuoso breathe", sleepMs);
+                                        Thread.sleep(sleepMs);
+                                } catch (Throwable e) {
+                                        log.error("could not sleep", e);
+                                }
                         }
                         for (var thread : threads) {
                                 thread.join();
