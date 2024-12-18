@@ -39,7 +39,7 @@ public class FilteringService {
                 var graphContainer = DataContainer.builder().build();
                 var resultContainer = DataContainer.builder().graphUri(graphContainer.getUri()).build();
 
-                var sleepMs = 100;
+                var sleepMs = 50;
                 for (var i = 0; i <= pagesCount; i++) {
                         var threads = new ArrayList<Thread>();
                         var offset = i * defaultLimitSize;
