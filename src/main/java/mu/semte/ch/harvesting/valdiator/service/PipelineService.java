@@ -12,51 +12,51 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.lib.dto.Task;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class PipelineService {
-  private final TaskService taskService;
-  private final FilteringService filteringService;
+    private final TaskService taskService;
+    private final FilteringService filteringService;
 
-  public PipelineService(TaskService taskService,
-      FilteringService filteringService) {
-    this.taskService = taskService;
-    this.filteringService = filteringService;
-  }
-
-  @Async
-  public void runPipeline(String deltaEntry) {
-
-    if (!taskService.isTask(deltaEntry))
-      return;
-    var task = taskService.loadTask(deltaEntry);
-
-    if (task == null || StringUtils.isEmpty(task.getOperation())) {
-      log.debug("task or operation is empty for delta entry {}", deltaEntry);
-      return;
+    public PipelineService(TaskService taskService,
+            FilteringService filteringService) {
+        this.taskService = taskService;
+        this.filteringService = filteringService;
     }
 
-    Optional<Consumer<Task>> taskConsumer = switch (task.getOperation()) {
-      case TASK_HARVESTING_FILTERING -> of(filteringService::runFilterPipeline);
-      default -> empty();
-    };
+    public void runPipeline(String deltaEntry) {
 
-    taskConsumer.ifPresentOrElse(consumer -> {
-      try {
-        taskService.updateTaskStatus(task, STATUS_BUSY);
-        consumer.accept(task);
-        taskService.updateTaskStatus(task, STATUS_SUCCESS);
-        log.debug("Done with success for task {}", task.getId());
-      } catch (Throwable e) {
-        log.error("Error:", e);
-        taskService.updateTaskStatus(task, STATUS_FAILED);
-        taskService.appendTaskError(task, StringUtils.abbreviate(e.getMessage(), 100));
-      }
-    }, () -> log.debug("unknown operation '{}' for delta entry {}", task.getOperation(), deltaEntry));
+        Thread.startVirtualThread(() -> {
+            if (!taskService.isTask(deltaEntry))
+                return;
+            var task = taskService.loadTask(deltaEntry);
 
-  }
+            if (task == null || StringUtils.isEmpty(task.getOperation())) {
+                log.debug("task or operation is empty for delta entry {}", deltaEntry);
+                return;
+            }
+
+            Optional<Consumer<Task>> taskConsumer = switch (task.getOperation()) {
+                case TASK_HARVESTING_FILTERING -> of(filteringService::runFilterPipeline);
+                default -> empty();
+            };
+
+            taskConsumer.ifPresentOrElse(consumer -> {
+                try {
+                    taskService.updateTaskStatus(task, STATUS_BUSY);
+                    consumer.accept(task);
+                    taskService.updateTaskStatus(task, STATUS_SUCCESS);
+                    log.debug("Done with success for task {}", task.getId());
+                } catch (Throwable e) {
+                    log.error("Error:", e);
+                    taskService.updateTaskStatus(task, STATUS_FAILED);
+                    taskService.appendTaskError(task, StringUtils.abbreviate(e.getMessage(), 100));
+                }
+            }, () -> log.debug("unknown operation '{}' for delta entry {}", task.getOperation(), deltaEntry));
+
+        });
+    }
 
 }
