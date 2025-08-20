@@ -10,7 +10,7 @@ import static mu.semte.ch.harvesting.valdiator.Constants.TASK_HARVESTING_FILTERI
 import java.util.Optional;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
-import mu.semte.ch.lib.dto.Task;
+import mu.semte.ch.harvesting.valdiator.service.TaskService.TaskWithJobId;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
@@ -31,14 +31,14 @@ public class PipelineService {
         Thread.startVirtualThread(() -> {
             if (!taskService.isTask(deltaEntry))
                 return;
-            var task = taskService.loadTask(deltaEntry);
-
+            var taskWithJobId = taskService.loadTask(deltaEntry);
+            var task = taskWithJobId.task();
             if (task == null || StringUtils.isEmpty(task.getOperation())) {
                 log.debug("task or operation is empty for delta entry {}", deltaEntry);
                 return;
             }
 
-            Optional<Consumer<Task>> taskConsumer = switch (task.getOperation()) {
+            Optional<Consumer<TaskWithJobId>> taskConsumer = switch (task.getOperation()) {
                 case TASK_HARVESTING_FILTERING -> of(filteringService::runFilterPipeline);
                 default -> empty();
             };
@@ -46,7 +46,7 @@ public class PipelineService {
             taskConsumer.ifPresentOrElse(consumer -> {
                 try {
                     taskService.updateTaskStatus(task, STATUS_BUSY);
-                    consumer.accept(task);
+                    consumer.accept(taskWithJobId);
                     taskService.updateTaskStatus(task, STATUS_SUCCESS);
                     log.debug("Done with success for task {}", task.getId());
                 } catch (Throwable e) {

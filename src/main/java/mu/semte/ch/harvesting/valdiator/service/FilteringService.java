@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import mu.semte.ch.harvesting.valdiator.service.TaskService.TaskWithJobId;
 import mu.semte.ch.lib.dto.DataContainer;
 import mu.semte.ch.lib.dto.Task;
 import mu.semte.ch.lib.shacl.ShaclService;
@@ -40,7 +41,8 @@ public class FilteringService {
     };
 
     @SneakyThrows
-    public void runFilterPipeline(Task task) {
+    public void runFilterPipeline(TaskWithJobId taskWithJobId) {
+        var task = taskWithJobId.task();
         var inputContainer = taskService.selectInputContainer(task).get(0);
         log.debug("input container: {}", inputContainer);
         var countTriples = taskService.countTriplesFromFileInputContainer(
@@ -66,17 +68,17 @@ public class FilteringService {
                     var report = shaclService.validate(mdb.model().getGraph());
                     log.info("triples conforms: {}", report.conforms());
 
-                    var validTriples = writeValidTriples(task, fileContainer, report, mdb);
+                    var validTriples = writeValidTriples(taskWithJobId, fileContainer, report, mdb);
 
                     var filteredGraph = validTriples.getKey().getGraphUri();
 
                     taskService.appendTaskResultFile(
-                            task,
+                            taskWithJobId,
                             graphContainer.toBuilder().graphUri(filteredGraph).build());
                     if (!report.conforms()) {
                         var reportModel = ModelUtils.replaceAnonNodes(report.getModel());
-                        writeReport(task, fileContainer, reportModel, mdb.derivedFrom());
-                        writeErrorTriples(task, fileContainer, mdb.model(),
+                        writeReport(taskWithJobId, fileContainer, reportModel, mdb.derivedFrom());
+                        writeErrorTriples(taskWithJobId, fileContainer, mdb.model(),
                                 validTriples.getValue(), mdb.derivedFrom());
                     }
                 }));
@@ -90,42 +92,42 @@ public class FilteringService {
         taskService.appendTaskResultGraph(task, resultContainer);
     }
 
-    private void writeErrorTriples(Task task, DataContainer fileContainer,
+    private void writeErrorTriples(TaskWithJobId taskWithJobId, DataContainer fileContainer,
             Model importedTriples, Model validTriples,
             String derivedFrom) {
         var errorTriples = importedTriples.difference(validTriples);
         log.debug("Number of errored triples: {}", errorTriples.size());
         var dataContainer = fileContainer.toBuilder()
                 .graphUri(taskService.writeTtlFile(
-                        task.getGraph(), new ModelByDerived(derivedFrom, errorTriples),
-                        "error-triples.ttl"))
+                        taskWithJobId.task().getGraph(), new ModelByDerived(derivedFrom, errorTriples),
+                        "error-triples.ttl", taskWithJobId.jobId()))
 
                 .build();
-        taskService.appendTaskResultFile(task, dataContainer);
+        taskService.appendTaskResultFile(taskWithJobId, dataContainer);
     }
 
-    private void writeReport(Task task, DataContainer fileContainer, Model report,
+    private void writeReport(TaskWithJobId taskWithJobId, DataContainer fileContainer, Model report,
             String derivedFrom) {
         var dataContainer = fileContainer.toBuilder()
                 .graphUri(taskService.writeTtlFile(
-                        task.getGraph(), new ModelByDerived(derivedFrom, report),
-                        "validation-report.ttl"))
+                        taskWithJobId.task().getGraph(), new ModelByDerived(derivedFrom, report),
+                        "validation-report.ttl", taskWithJobId.jobId()))
 
                 .build();
-        taskService.appendTaskResultFile(task, dataContainer);
+        taskService.appendTaskResultFile(taskWithJobId, dataContainer);
     }
 
-    private Map.Entry<DataContainer, Model> writeValidTriples(Task task, DataContainer fileContainer,
+    private Map.Entry<DataContainer, Model> writeValidTriples(TaskWithJobId taskWithJobId, DataContainer fileContainer,
             ValidationReport report, ModelByDerived importedTriples) {
         log.debug("filter non conform triples...");
         var validTriples = shaclService.filter(importedTriples.model(), report);
         var dataContainer = fileContainer.toBuilder()
                 .graphUri(taskService.writeTtlFile(
-                        task.getGraph(),
+                        taskWithJobId.task().getGraph(),
                         new ModelByDerived(importedTriples.derivedFrom(), validTriples),
-                        "valid-triples.ttl"))
+                        "valid-triples.ttl", taskWithJobId.jobId()))
                 .build();
-        taskService.appendTaskResultFile(task, dataContainer);
+        taskService.appendTaskResultFile(taskWithJobId, dataContainer);
         return Map.entry(dataContainer, validTriples);
     }
 }
