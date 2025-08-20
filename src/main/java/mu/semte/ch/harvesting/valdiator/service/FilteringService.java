@@ -6,7 +6,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.harvesting.valdiator.service.TaskService.TaskWithJobId;
 import mu.semte.ch.lib.dto.DataContainer;
-import mu.semte.ch.lib.dto.Task;
 import mu.semte.ch.lib.shacl.ShaclService;
 import mu.semte.ch.lib.utils.ModelUtils;
 import org.apache.jena.rdf.model.Model;

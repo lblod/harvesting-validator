@@ -56,6 +56,7 @@ public class ApplicationConfig {
     }
 
     @Bean
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public SparqlQueryStore sparqlQueryLoader() {
         log.info("Adding {} queries to the store", this.queries.length);
         Map<String, String> queriesMap = (Map) Arrays.stream(this.queries).map((r) -> {
