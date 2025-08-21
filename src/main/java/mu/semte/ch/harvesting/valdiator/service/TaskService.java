@@ -220,7 +220,7 @@ public class TaskService {
     var rootDir = new File(baseFolder);
     rootDir.mkdirs();
     var path = "%s/%s".formatted(baseFolder, phyFilename);
-    var physicalFile = "share://%s".formatted(baseFolder.replace("/share", "") + phyFilename);
+    var physicalFile = "share://%s".formatted(baseFolder.replace("/share/", "") + phyFilename);
     var loId = uuid();
     var logicalFile = "%s/%s".formatted(LOGICAL_FILE_PREFIX, loId);
     var now = formattedDate(LocalDateTime.now());
