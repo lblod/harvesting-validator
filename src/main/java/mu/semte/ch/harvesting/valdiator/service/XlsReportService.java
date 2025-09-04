@@ -15,8 +15,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import mu.semte.ch.harvesting.valdiator.service.TaskService.TaskWithJobId;
 import mu.semte.ch.lib.dto.DataContainer;
-import mu.semte.ch.lib.dto.Task;
 import mu.semte.ch.lib.shacl.ShaclService;
 import mu.semte.ch.lib.utils.SparqlClient;
 import mu.semte.ch.lib.utils.SparqlQueryStore;
@@ -58,8 +58,9 @@ public class XlsReportService {
     this.taskService = taskService;
   }
 
-  public void writeReport(Task task, Model report, DataContainer fileContainer,
+  public void writeReport(TaskWithJobId taskWithJobId, Model report, DataContainer fileContainer,
       String derivedFrom) {
+    var task = taskWithJobId.task();
     ValidationReport validationReport = ShaclService.fromModel(report);
 
     if (validationReport.conforms()) {
@@ -129,7 +130,7 @@ public class XlsReportService {
     var dataContainer = fileContainer.toBuilder()
         .graphUri(writeFile(task.getGraph(), workbook, derivedFrom))
         .build();
-    taskService.appendTaskResultFile(task, dataContainer);
+    taskService.appendTaskResultFile(taskWithJobId, dataContainer);
   }
 
   private String abbreviate(String val) {
