@@ -218,7 +218,9 @@ public class TaskService {
     var phyFilename = "%s.%s".formatted(phyId, fileExtension);
     var baseFolder = "%s/%s/filter".formatted(shareFolderPath, folderId);
     var rootDir = new File(baseFolder);
-    rootDir.mkdirs();
+    if (!rootDir.mkdirs() && !rootDir.exists()) {
+      throw new RuntimeException("Failed to create directory: " + baseFolder);
+    }
     var path = "%s/%s".formatted(baseFolder, phyFilename);
     var physicalFile = "share://%s".formatted(baseFolder.replace("/share/", "") + "/" +phyFilename);
     var loId = uuid();
