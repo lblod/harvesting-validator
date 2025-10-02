@@ -25,7 +25,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.text.CaseUtils;
 
-import com.github.jsonldjava.shaded.com.google.common.collect.Maps;
 import static mu.semte.ch.lib.utils.ModelUtils.filenameToLang;
 import static mu.semte.ch.lib.utils.ModelUtils.toModel;
 
@@ -56,14 +55,13 @@ public class ApplicationConfig {
     }
 
     @Bean
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     public SparqlQueryStore sparqlQueryLoader() {
         log.info("Adding {} queries to the store", this.queries.length);
-        Map<String, String> queriesMap = (Map) Arrays.stream(this.queries).map((r) -> {
+        Map<String, String> queriesMap = Arrays.asList(this.queries).stream().map((r) -> {
             try {
                 String key = CaseUtils.toCamelCase(FilenameUtils.removeExtension(r.getFilename()), false,
                         new char[] { '-' });
-                return Maps.immutableEntry(key, IOUtils.toString(r.getInputStream(), StandardCharsets.UTF_8));
+                return Map.entry(key, IOUtils.toString(r.getInputStream(), StandardCharsets.UTF_8));
             } catch (IOException var2) {
                 throw new RuntimeException(var2);
             }

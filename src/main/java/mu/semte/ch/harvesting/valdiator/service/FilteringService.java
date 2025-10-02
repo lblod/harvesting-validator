@@ -2,6 +2,8 @@ package mu.semte.ch.harvesting.valdiator.service;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
+
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import mu.semte.ch.harvesting.valdiator.service.TaskService.TaskWithJobId;
@@ -27,9 +29,7 @@ public class FilteringService {
         this.taskService = taskService;
     }
 
-    @Value("${application.sleepBetweenJob}")
-    private int sleepMs;
-
+    @SuppressWarnings("unused")
     private void sleep(int sleepMs) {
         try {
             log.info("sleep for {} ms to let virtuoso breathe", sleepMs);
@@ -52,6 +52,7 @@ public class FilteringService {
         var graphContainer = DataContainer.builder().build();
         var resultContainer = DataContainer.builder().graphUri(graphContainer.getUri()).build();
 
+        var semaphore = new Semaphore(Runtime.getRuntime().availableProcessors());
         for (var i = 0; i <= pagesCount; i++) {
             var threads = new ArrayList<Thread>();
             var offset = i * defaultLimitSize;
@@ -59,29 +60,39 @@ public class FilteringService {
                     inputContainer.getGraphUri(), defaultLimitSize, offset);
             for (var mdb : importedTriples) {
                 threads.add(Thread.startVirtualThread(() -> {
-                    // var report = taskService.fetchValidationGraphByDerivedFrom(
-                    // inputContainer.getValidationGraphUri(),
-                    // mdb.derivedFrom());
+                    try {
+                        log.info("acquiring lock...");
+                        // optimization: virtuoso can't catch up, therefore limit number of
+                        // tasks running at the same time
+                        semaphore.acquire();
+                        // var report = taskService.fetchValidationGraphByDerivedFrom(
+                        // inputContainer.getValidationGraphUri(),
+                        // mdb.derivedFrom());
 
-                    log.info("generate validation reports...");
-                    var report = shaclService.validate(mdb.model().getGraph());
-                    log.info("triples conforms: {}", report.conforms());
+                        log.info("generate validation reports...");
+                        var report = shaclService.validate(mdb.model().getGraph());
+                        log.info("triples conforms: {}", report.conforms());
 
-                    var validTriples = writeValidTriples(taskWithJobId, fileContainer, report, mdb);
+                        var validTriples = writeValidTriples(taskWithJobId, fileContainer, report, mdb);
 
-                    var filteredGraph = validTriples.getKey().getGraphUri();
+                        var filteredGraph = validTriples.getKey().getGraphUri();
 
-                    taskService.appendTaskResultFile(
-                            taskWithJobId,
-                            graphContainer.toBuilder().graphUri(filteredGraph).build());
-                    if (!report.conforms()) {
-                        var reportModel = ModelUtils.replaceAnonNodes(report.getModel());
-                        writeReport(taskWithJobId, fileContainer, reportModel, mdb.derivedFrom());
-                        writeErrorTriples(taskWithJobId, fileContainer, mdb.model(),
-                                validTriples.getValue(), mdb.derivedFrom());
+                        taskService.appendTaskResultFile(
+                                taskWithJobId,
+                                graphContainer.toBuilder().graphUri(filteredGraph).build());
+                        if (!report.conforms()) {
+                            var reportModel = ModelUtils.replaceAnonNodes(report.getModel());
+                            writeReport(taskWithJobId, fileContainer, reportModel, mdb.derivedFrom());
+                            writeErrorTriples(taskWithJobId, fileContainer, mdb.model(),
+                                    validTriples.getValue(), mdb.derivedFrom());
+                        }
+                    } catch (Exception e) {
+                        log.error("something has failed while processing the task", e);
+                        throw new RuntimeException(e);
+                    } finally {
+                        semaphore.release();
                     }
                 }));
-                sleep(sleepMs);
             }
             for (var thread : threads) {
                 thread.join();

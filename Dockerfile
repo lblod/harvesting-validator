@@ -1,4 +1,4 @@
-FROM maven:3.9-eclipse-temurin-21 as builder
+FROM maven:3.9-eclipse-temurin-25 as builder
 LABEL maintainer="info@redpencil.io"
 
 WORKDIR /app
@@ -11,10 +11,10 @@ COPY ./src ./src
 
 RUN mvn package -DskipTests
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:25-jre
 
 WORKDIR /app
 
 COPY --from=builder /app/target/harvesting-validator.jar ./app.jar
 #ENV JAVA_OPTS=""
-ENTRYPOINT ["java", "-XX:+CompactStrings", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-XX:+UseCompactObjectHeaders", "-jar", "/app/app.jar"]
